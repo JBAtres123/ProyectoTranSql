@@ -1,0 +1,108 @@
+﻿@page "/ColaboradorReservacion"
+@using Microsoft.EntityFrameworkCore
+@using ProyectoTranSql.Models
+@inject ProyectoTranSql.Data.MyDbContext DbContext
+
+<head>
+    <link href="css/StyleReservacion.css" rel="stylesheet" />
+</head>
+
+<h3>Información del Colaborador</h3>
+
+@if (colaborador == null)
+{
+    <div class="search-container">
+        <label for="colaboradorId">Ingrese su ID de Colaborador: </label>
+        <input type="number" @bind="colaboradorId" />
+        <button @onclick="BuscarColaborador">Buscar</button>
+    </div>
+}
+else
+{
+    <div class="colaborador-info">
+        <h4>Detalles del Colaborador</h4>
+        <p><strong>ID:</strong> @colaborador.ColaboradorID</p>
+        <p><strong>Nombre:</strong> @colaborador.Nombre</p>
+        <p><strong>Apellido:</strong> @colaborador.Apellido</p>
+        <p><strong>Correo:</strong> @colaborador.Correo</p>
+        <p><strong>Teléfono:</strong> @colaborador.Telefono</p>
+        <p><strong>Departamento:</strong> @departamento?.Nombre</p>
+
+        @if (!mostrarVehiculos)
+        {
+            <button @onclick="CargarVehiculos">Ver Vehículos</button>
+        }
+        else
+        {
+            <button @onclick="OcultarVehiculos">Ocultar Lista</button>
+        }
+    </div>
+
+    @if (mostrarVehiculos && vehiculos != null && vehiculos.Any())
+    {
+        <h4>Lista de Vehículos</h4>
+        <div class="vehiculos-list">
+            @foreach (var vehiculo in vehiculos)
+            {
+                <div class="vehiculo-item">
+                    <strong>Marca:</strong> @vehiculo.ModeloVehiculo.MarcaVehiculo.Marca <br />
+                    <strong>Modelo:</strong> @vehiculo.ModeloVehiculo.Modelo <br />
+                    <strong>Año:</strong> @vehiculo.ModeloVehiculo.Año <br />
+                    <strong>Placa:</strong> @vehiculo.Placa <br />
+                    <strong>Estado:</strong> @vehiculo.EstadoVehiculo.Estado
+                </div>
+            }
+        </div>
+    }
+    else if (vehiculos != null && !vehiculos.Any())
+    {
+        <p>No hay vehículos disponibles en la base de datos.</p>
+    }
+}
+
+@if (mensajeError != null)
+{
+    <p style="color:red">@mensajeError</p>
+}
+
+@code {
+    private int colaboradorId;
+    private Colaborador colaborador;
+    private Departamento departamento;
+    private string mensajeError;
+    private List<Vehiculo> vehiculos;
+    private bool mostrarVehiculos; // Variable para controlar la visibilidad de la lista
+
+    private async Task BuscarColaborador()
+    {
+        colaborador = await DbContext.Colaboradores.FindAsync(colaboradorId);
+        if (colaborador != null)
+        {
+            departamento = await DbContext.Departamentos.FindAsync(colaborador.DepartamentoID);
+            mensajeError = null;
+        }
+        else
+        {
+            mensajeError = "Colaborador no encontrado.";
+            departamento = null;
+        }
+    }
+
+    private async Task CargarVehiculos()
+    {
+        vehiculos = await DbContext.Vehiculos
+            .Include(v => v.ModeloVehiculo)
+            .Include(v => v.ModeloVehiculo.MarcaVehiculo)
+            .Include(v => v.EstadoVehiculo)
+            .ToListAsync();
+        mostrarVehiculos = true; // Mostrar la lista de vehículos
+    }
+
+    private void OcultarVehiculos()
+    {
+        mostrarVehiculos = false; // Ocultar la lista de vehículos
+        vehiculos = null; // Opcionalmente, puedes vaciar la lista
+    }
+}
+
+

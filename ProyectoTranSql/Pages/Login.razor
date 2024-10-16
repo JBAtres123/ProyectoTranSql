@@ -1,0 +1,50 @@
+﻿@page "/login"
+@using ProyectoTranSql.Models
+@inject ProyectoTranSql.Data.AuthService AuthService
+@inject NavigationManager Navigation
+
+<head>
+    <link href="css/StyleLogin.css" rel="stylesheet" />
+</head>
+
+<div class="login-container">
+    <h3>Login</h3>
+
+    <div>
+        <label>Nombre de Usuario: </label>
+        <input @bind="nombreUsuario" />
+    </div>
+    <div>
+        <label>Contraseña: </label>
+        <input @bind="contraseña" type="password" />
+    </div>
+    <button @onclick="IniciarSesion">Iniciar Sesión</button>
+
+    @if (mensajeError != null)
+    {
+        <p>@mensajeError</p>
+    }
+</div>
+
+@code {
+    private string nombreUsuario;
+    private string contraseña;
+    private string mensajeError;
+
+    private async Task IniciarSesion()
+    {
+        var tipoUsuario = await AuthService.LoginAsync(nombreUsuario, contraseña);
+        if (tipoUsuario == null)
+        {
+            mensajeError = "Usuario o contraseña incorrectos.";
+        }
+        else
+        {
+            // Redirigir a la página según el tipo de usuario
+            Navigation.NavigateTo(tipoUsuario == "Administrador" ? "/LogisticaTrans" : "/ColaboradorReservacion");
+        }
+    }
+}
+
+
+
