@@ -6,6 +6,6 @@
         public string Nombre { get; set; }
 
 
-        public virtual ICollection<SolicitudReservacion> SolicitudResrvacion { get; set; }
+        public virtual ICollection<SolicitudReservacion> SolicitudReservacion { get; set; }
     }
 }

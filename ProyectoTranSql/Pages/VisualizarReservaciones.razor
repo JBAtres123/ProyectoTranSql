@@ -1,83 +1,112 @@
-﻿@page "/VisualizarReservaciones"
+﻿@page "/VerReservarcion"
 @using Microsoft.EntityFrameworkCore
 @using ProyectoTranSql.Models
 @inject ProyectoTranSql.Data.MyDbContext DbContext
+@inject NavigationManager NavigationManager
 
-<h3>Solicitudes de Reservación</h3>
+<h3>Listado de Solicitudes de Reservación</h3>
 
-@if (reservaciones == null)
+@if (solicitudes == null)
 {
-    <p>Cargando solicitudes...</p>
+    <p><em>Cargando datos...</em></p>
 }
-else if (!reservaciones.Any())
+else if (!solicitudes.Any())
 {
-    <p>No hay solicitudes de reservación disponibles.</p>
+    <p>No se encontraron solicitudes.</p>
 }
 else
 {
-    <table class="table">
+    <table class="table table-striped">
         <thead>
             <tr>
-                <th>ID Solicitud</th>
+                <th>Solicitud ID</th>
                 <th>Motivo</th>
                 <th>Fecha Solicitud</th>
                 <th>Colaborador</th>
                 <th>Departamento</th>
-                <th>Estado Solicitud</th>
+                <th>Estado de Solicitud</th>
                 <th>Destino</th>
                 <th>Piloto</th>
-                <th>Rechazo</th>
+                <th>Acciones</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var reservacion in reservaciones)
+            @foreach (var solicitud in solicitudes)
             {
                 <tr>
-                    <td>@reservacion.SolicitudID</td>
-                    <td>@reservacion.Motivo</td>
-                    <td>@reservacion.FechaSolicitud.ToString("dd/MM/yyyy HH:mm")</td>
-                    <td>@reservacion.Colaboradores?.Nombre ?? "No disponible"</td>
-                    <td>@reservacion.Departamentos?.Nombre ?? "No disponible"</td>
-                    <td>@reservacion.EstadosSolicitud?.SolicitudEstado ?? "No disponible"</td>
-                    <td>@reservacion.Destino?.NombreDestino ?? "No disponible"</td>
-                    <td>@reservacion.Piloto?.NombrePiloto ?? "No disponible"</td>
-                    <td>@reservacion.RechazoSolicitud?.Justificacion ?? "No disponible"</td>
+                    <td>@solicitud.SolicitudID</td>
+                    <td>@solicitud.Motivo</td>
+                    <td>@solicitud.FechaSolicitud.ToShortDateString()</td>
+                    <td>@solicitud.Colaboradores?.Nombre</td>
+                    <td>@solicitud.Departamentos?.Nombre</td>
+                    <td>@solicitud.EstadosSolicitud?.SolicitudEstado</td>
+                    <td>@solicitud.Destino?.NombreDestino</td>
+                    <td>@solicitud.Piloto?.NombrePiloto</td>
+                    <td>
+                        <div class="d-flex justify-content-between">
+                            <button class="btn btn-success btn-sm me-1" @onclick="() => AprobarSolicitud(solicitud.SolicitudID)">Aprobada</button>
+                            <button class="btn btn-danger btn-sm me-1" @onclick="() => RechazarSolicitud(solicitud.SolicitudID)">Rechazada</button>
+                        </div>
+                    </td>
                 </tr>
             }
         </tbody>
     </table>
 }
 
-@if (!string.IsNullOrEmpty(errorMessage))
-{
-    <div class="alert alert-danger">@errorMessage</div>
-}
-
 @code {
-    private List<SolicitudReservacion> reservaciones;
-    private string errorMessage;
+    private List<SolicitudReservacion> solicitudes;
 
     protected override async Task OnInitializedAsync()
     {
-        try
+        // Cargar las entidades relacionadas con Include
+        solicitudes = await DbContext.SolicitudReservacion
+            .Include(s => s.Colaboradores)
+            .Include(s => s.Departamentos)
+            .Include(s => s.EstadosSolicitud)
+            .Include(s => s.Destino)
+            .Include(s => s.Piloto)
+            .ToListAsync();
+    }
+
+    private async Task AprobarSolicitud(int solicitudId)
+    {
+        // Cambiar el estado de la solicitud a "Aprobada" y redirigir
+        await CambiarEstado(solicitudId, 1); // Estado Aprobado
+        NavigationManager.NavigateTo($"/AprobarSolicitud/{solicitudId}");
+    }
+
+    private async Task RechazarSolicitud(int solicitudId)
+    {
+        // Cambiar el estado de la solicitud a "Rechazada" y redirigir
+        await CambiarEstado(solicitudId, 2); // Estado Rechazado
+        NavigationManager.NavigateTo($"/RechazarSolicitud/{solicitudId}");
+    }
+
+    private async Task CambiarEstado(int solicitudId, int nuevoEstado)
+    {
+        // Buscar la solicitud en la base de datos
+        var solicitud = await DbContext.SolicitudReservacion.FindAsync(solicitudId);
+
+        if (solicitud != null)
         {
-            reservaciones = await DbContext.SolicitudReservacion
-                .Include(sr => sr.Colaboradores)
-                .Include(sr => sr.Departamentos)
-                .Include(sr => sr.EstadosSolicitud)
-                .Include(sr => sr.Destino)
-                .Include(sr => sr.Piloto)
-                .Include(sr => sr.RechazoSolicitud)
+            // Cambiar el estado de la solicitud
+            solicitud.EstadoSolicitudID = nuevoEstado;
+
+            // Guardar los cambios en la base de datos
+            await DbContext.SaveChangesAsync();
+
+            // Recargar las solicitudes para reflejar el cambio
+            solicitudes = await DbContext.SolicitudReservacion
+                .Include(s => s.Colaboradores)
+                .Include(s => s.Departamentos)
+                .Include(s => s.EstadosSolicitud)
+                .Include(s => s.Destino)
+                .Include(s => s.Piloto)
                 .ToListAsync();
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"Ocurrió un error al cargar las solicitudes: {ex.Message}";
         }
     }
 }
-
-
 
 
 

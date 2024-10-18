@@ -25,13 +25,26 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
-
 app.UseRouting();
 
+// Aquí se inyecta el servicio de navegación
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 
+// Redirigir a la página específica al iniciar
+app.Use(async (context, next) =>
+{
+    // Verificar si la solicitud es para la raíz ("/")
+    if (context.Request.Path == "/")
+    {
+        // Redirigir a la página de Reservación
+        context.Response.Redirect("/login");
+        return; // No continuar con la siguiente middleware
+    }
+    await next(); // Llama al siguiente middleware
+});
+
 app.Run();
+
 

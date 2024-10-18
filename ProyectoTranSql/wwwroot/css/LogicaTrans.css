@@ -1,0 +1,160 @@
+﻿/* Fondo con un degradado vibrante y animado */
+body {
+    background: linear-gradient(45deg, #FF512F, #DD2476, #24C6DC);
+    background-size: 200% 200%;
+    animation: gradientAnimation 10s ease infinite;
+    height: 100vh;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+/* Animación del degradado */
+@keyframes gradientAnimation {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* Imagen de fondo transparente */
+body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('images/Imagen-de-WhatsApp-2024-10-14.jpg'); /* Ruta de la imagen */
+    background-size: cover;
+    background-position: center;
+    opacity: 0.2; /* Nivel de transparencia de la imagen de fondo */
+    z-index: 0; /* Para que la imagen quede debajo del contenido */
+}
+
+/* Estilo para el contenedor de la cuadrícula */
+.grid-container {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    align-items: center;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 50px;
+    position: relative;
+    gap: 20px;
+    z-index: 1; /* Colocar el contenido encima de la imagen de fondo */
+}
+
+.grid-item {
+    text-align: center;
+    margin-top: 50px;
+}
+
+/* Botón de reservaciones: Circular, con un efecto brillante y color distintivo */
+.btn-reservaciones {
+    display: inline-block;
+    padding: 40px;
+    font-size: 24px;
+    color: white;
+    text-decoration: none;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #FFD200, #F7971E);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2), 0 6px 6px rgba(0, 0, 0, 0.1);
+    width: 200px;
+    height: 200px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    text-align: center;
+    line-height: 120px;
+}
+
+    .btn-reservaciones:hover {
+        transform: scale(1.15);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3), 0 10px 10px rgba(0, 0, 0, 0.2);
+    }
+
+/* Botón de vehículos: Cuadrado con efectos de borde y color vibrante */
+.btn-vehiculos {
+    display: inline-block;
+    padding: 20px;
+    font-size: 18px;
+    color: white;
+    text-decoration: none;
+    border-radius: 15px;
+    background: linear-gradient(145deg, #2196F3, #6DD5FA);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+    width: 150px;
+    text-align: center;
+}
+
+    .btn-vehiculos:hover {
+        transform: scale(1.1);
+        background: linear-gradient(145deg, #6DD5FA, #2196F3);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+    }
+
+/* Botón de colaboradores: Cuadrado con degradado y sombra */
+.btn-colaboradores {
+    display: inline-block;
+    padding: 20px;
+    font-size: 18px;
+    color: white;
+    text-decoration: none;
+    border-radius: 15px;
+    background: linear-gradient(145deg, #FF5722, #FF8A50);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+    width: 150px;
+    text-align: center;
+}
+
+    .btn-colaboradores:hover {
+        transform: scale(1.1);
+        background: linear-gradient(145deg, #FF8A50, #FF5722);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+    }
+
+/* Ajuste para que el contenido ocupe todo el ancho de la pantalla */
+.page {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+main {
+    flex-grow: 1;
+    width: 100%;
+}
+
+.content {
+    padding: 20px;
+}
+
+/* Contenedor de la imagen individual debajo de los botones */
+.image-container {
+    text-align: center;
+    margin-top: 20px;
+    z-index: 1; /* Mantener la imagen visible por encima del fondo */
+}
+
+    .image-container img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s ease;
+        opacity: 1; /* Asegurar que la imagen esté completamente visible */
+    }
+
+        .image-container img:hover {
+            transform: scale(1.05);
+        }
