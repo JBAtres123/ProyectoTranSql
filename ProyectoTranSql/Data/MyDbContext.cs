@@ -11,10 +11,15 @@ namespace ProyectoTranSql.Data
         public DbSet<ModeloVehiculo> ModelosVehiculo { get; set; }
         public DbSet<MarcaVehiculo> MarcasVehiculo { get; set; }
         public DbSet<EstadosVehiculo> EstadosVehiculo { get; set; }
-        public DbSet<Usuario> Usuarios { get; set; } // DbSet para la tabla Usuario
-        public DbSet<Colaborador> Colaboradores { get; set; } // DbSet para la tabla Colaboradores
-        public DbSet<Departamento> Departamentos { get; set; } // DbSet para la tabla Departamentos
-        public DbSet<TiposVehiculo> TiposVehiculo { get; set; } // DbSet para la tabla TiposVehiculo
+        public DbSet<Usuario> Usuarios { get; set; }
+        public DbSet<Colaborador> Colaboradores { get; set; }
+        public DbSet<Departamento> Departamentos { get; set; }
+        public DbSet<TiposVehiculo> TiposVehiculo { get; set; }
+        public DbSet<EstadosSolicitud> EstadosSolicitud { get; set; }
+        public DbSet<Destino> Destino { get; set; }
+        public DbSet<Piloto> Piloto { get; set; }
+        public DbSet<RechazoSolicitud> RechazoSolicitud { get; set; }
+        public DbSet<SolicitudReservacion> SolicitudReservacion { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -53,17 +58,82 @@ namespace ProyectoTranSql.Data
             // Configuración de la entidad EstadosVehiculo
             modelBuilder.Entity<EstadosVehiculo>(entity =>
             {
-                entity.ToTable("EstadosVehiculo"); // Asegúrate de que coincida con el nombre de tu tabla
-                entity.HasKey(e => e.EstadoVehiculoID); // Definir la clave primaria
-                entity.Property(e => e.Estado).IsRequired().HasMaxLength(50); // Configurar propiedades
+                entity.ToTable("EstadosVehiculo");
+                entity.HasKey(e => e.EstadoVehiculoID);
+                entity.Property(e => e.Estado).IsRequired().HasMaxLength(50);
             });
 
             // Configuración de la entidad TiposVehiculo
             modelBuilder.Entity<TiposVehiculo>(entity =>
             {
-                entity.ToTable("TiposVehiculo"); // Nombre de la tabla
-                entity.HasKey(t => t.TipoVehiculoID); // Definir la clave primaria
-                entity.Property(t => t.Tipo).IsRequired().HasMaxLength(50); // Configurar propiedad
+                entity.ToTable("TiposVehiculo");
+                entity.HasKey(t => t.TipoVehiculoID);
+                entity.Property(t => t.Tipo).IsRequired().HasMaxLength(50);
+            });
+
+            // Configuración de la entidad EstadoSolicitud
+            modelBuilder.Entity<EstadosSolicitud>(entity =>
+            {
+                entity.ToTable("EstadosSolicitud");
+                entity.HasKey(es => es.EstadoSolicitudID); // Definir la clave primaria
+                entity.Property(es => es.SolicitudEstado).IsRequired().HasMaxLength(100); // Propiedades adicionales
+            });
+
+            // Configuración de la entidad Destino
+            modelBuilder.Entity<Destino>(entity =>
+            {
+                entity.ToTable("Destino");
+                entity.HasKey(d => d.DestinoID); // Definir la clave primaria
+                entity.Property(d => d.NombreDestino).IsRequired().HasMaxLength(100); // Propiedades adicionales
+            });
+
+            // Configuración de la entidad Piloto
+            modelBuilder.Entity<Piloto>(entity =>
+            {
+                entity.ToTable("Piloto");
+                entity.HasKey(p => p.PilotoID); // Definir la clave primaria
+                entity.Property(p => p.NombrePiloto).IsRequired().HasMaxLength(50); // Propiedades adicionales
+              
+            });
+
+            // Configuración de la entidad RechazoSolicitud
+            modelBuilder.Entity<RechazoSolicitud>(entity =>
+            {
+                entity.ToTable("RechazoSolicitud");
+                entity.HasKey(r => r.RechazoID); // Definir la clave primaria
+                entity.Property(r => r.Justificacion)
+                 .IsRequired()
+                 .HasMaxLength(500); // Ajusta el tamaño según tus necesidades
+
+                entity.Property(r => r.FechaRechazo)
+                    .IsRequired();
+            });
+
+            // Configuración de la entidad SolicitudReservacion
+            modelBuilder.Entity<SolicitudReservacion>(entity =>
+            {
+                entity.ToTable("SolicitudReservacion");
+                entity.HasKey(sr => sr.SolicitudID); // Definir la clave primaria
+
+                entity.HasOne(sr => sr.Colaboradores)
+                    .WithMany() // Relación con Colaborador
+                    .HasForeignKey(sr => sr.ColaboradorID);
+
+                entity.HasOne(sr => sr.EstadosSolicitud)
+                    .WithMany() // Relación con EstadoSolicitud
+                    .HasForeignKey(sr => sr.EstadoSolicitudID);
+
+                entity.HasOne(sr => sr.Destino)
+                    .WithMany() // Relación con Destino
+                    .HasForeignKey(sr => sr.DestinoID);
+
+                entity.HasOne(sr => sr.Piloto)
+                    .WithMany() // Relación con Piloto
+                    .HasForeignKey(sr => sr.PilotoID);
+
+                entity.HasOne(sr => sr.RechazoSolicitud)
+                    .WithMany() // Relación con RechazoSolicitud
+                    .HasForeignKey(sr => sr.RechazoID);
             });
         }
     }

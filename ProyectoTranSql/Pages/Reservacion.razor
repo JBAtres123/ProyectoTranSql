@@ -1,0 +1,119 @@
+﻿@page "/Reservacion"
+@using Microsoft.EntityFrameworkCore
+@using ProyectoTranSql.Models
+@inject ProyectoTranSql.Data.MyDbContext DbContext
+
+<h3>Crear Solicitud de Reservación</h3>
+
+@if (!formEnviado)
+{
+    <EditForm Model="formModel" OnValidSubmit="GuardarDatos">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div>
+            <label for="nombreDestino">Nombre del Destino:</label>
+            <InputText id="nombreDestino" @bind-Value="formModel.NombreDestino" class="form-control" />
+        </div>
+
+        <div>
+            <label for="nombrePiloto">Responsable (Nombre del Piloto):</label>
+            <InputText id="nombrePiloto" @bind-Value="formModel.NombrePiloto" class="form-control" />
+        </div>
+
+        <div>
+            <label for="motivo">Motivo de la Solicitud:</label>
+            <InputTextArea id="motivo" @bind-Value="formModel.Motivo" class="form-control" />
+        </div>
+
+        <div>
+            <label for="fechaSolicitud">Fecha de la Solicitud:</label>
+            <InputDate id="fechaSolicitud" @bind-Value="formModel.FechaSolicitud" class="form-control" />
+        </div>
+
+        <div>
+            <button type="submit" class="btn btn-primary">Guardar Solicitud</button>
+        </div>
+    </EditForm>
+}
+else
+{
+    <p>Solicitud guardada con éxito.</p>
+    <button @onclick="NuevoRegistro" class="btn btn-secondary">Crear Otra Solicitud</button>
+}
+
+@if (!string.IsNullOrEmpty(mensajeError))
+{
+    <p style="color:red">@mensajeError</p>
+}
+
+@code {
+    private FormModel formModel = new FormModel(); 
+    private bool formEnviado = false;
+    private string mensajeError = null;
+
+   
+    private class FormModel
+    {
+        public string NombreDestino { get; set; }
+        public string NombrePiloto { get; set; }
+        public string Motivo { get; set; }
+        public DateTime FechaSolicitud { get; set; }
+    }
+
+    private async Task GuardarDatos()
+    {
+        try
+        {
+     
+            var nuevoDestino = new Destino
+                {
+                    NombreDestino = formModel.NombreDestino
+                };
+            await DbContext.Destino.AddAsync(nuevoDestino);
+            await DbContext.SaveChangesAsync(); 
+
+           
+            var nuevoPiloto = new Piloto
+                {
+                    NombrePiloto = formModel.NombrePiloto
+                };
+            await DbContext.Piloto.AddAsync(nuevoPiloto);
+            await DbContext.SaveChangesAsync(); 
+
+
+            var nuevaSolicitud = new SolicitudReservacion
+                {
+                    Motivo = formModel.Motivo,
+                    FechaSolicitud = formModel.FechaSolicitud,
+                    DestinoID = nuevoDestino.DestinoID, 
+                    PilotoID = nuevoPiloto.PilotoID,   
+                    ColaboradorID = null, 
+                    DepartamentoID = null,
+                    EstadoSolicitudID = null,
+                    RechazoID = null
+                };
+            await DbContext.SolicitudReservacion.AddAsync(nuevaSolicitud);
+            await DbContext.SaveChangesAsync();
+
+            formEnviado = true;  
+        }
+        catch (Exception ex)
+        {
+            mensajeError = $"Error al guardar la solicitud: {ex.Message}";
+        }
+    }
+
+    private void NuevoRegistro()
+    {
+
+        formModel = new FormModel();
+        formEnviado = false;
+        mensajeError = null;
+    }
+}
+
+
+
+
+

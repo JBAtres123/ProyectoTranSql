@@ -1,0 +1,83 @@
+﻿@page "/VisualizarReservaciones"
+@using Microsoft.EntityFrameworkCore
+@using ProyectoTranSql.Models
+@inject ProyectoTranSql.Data.MyDbContext DbContext
+
+<h3>Solicitudes de Reservación</h3>
+
+@if (reservaciones == null)
+{
+    <p>Cargando solicitudes...</p>
+}
+else if (!reservaciones.Any())
+{
+    <p>No hay solicitudes de reservación disponibles.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID Solicitud</th>
+                <th>Motivo</th>
+                <th>Fecha Solicitud</th>
+                <th>Colaborador</th>
+                <th>Departamento</th>
+                <th>Estado Solicitud</th>
+                <th>Destino</th>
+                <th>Piloto</th>
+                <th>Rechazo</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var reservacion in reservaciones)
+            {
+                <tr>
+                    <td>@reservacion.SolicitudID</td>
+                    <td>@reservacion.Motivo</td>
+                    <td>@reservacion.FechaSolicitud.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>@reservacion.Colaboradores?.Nombre ?? "No disponible"</td>
+                    <td>@reservacion.Departamentos?.Nombre ?? "No disponible"</td>
+                    <td>@reservacion.EstadosSolicitud?.SolicitudEstado ?? "No disponible"</td>
+                    <td>@reservacion.Destino?.NombreDestino ?? "No disponible"</td>
+                    <td>@reservacion.Piloto?.NombrePiloto ?? "No disponible"</td>
+                    <td>@reservacion.RechazoSolicitud?.Justificacion ?? "No disponible"</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+@code {
+    private List<SolicitudReservacion> reservaciones;
+    private string errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            reservaciones = await DbContext.SolicitudReservacion
+                .Include(sr => sr.Colaboradores)
+                .Include(sr => sr.Departamentos)
+                .Include(sr => sr.EstadosSolicitud)
+                .Include(sr => sr.Destino)
+                .Include(sr => sr.Piloto)
+                .Include(sr => sr.RechazoSolicitud)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Ocurrió un error al cargar las solicitudes: {ex.Message}";
+        }
+    }
+}
+
+
+
+
+

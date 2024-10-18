@@ -8,10 +8,10 @@ namespace ProyectoTranSql.Models
         public int ModeloVehiculoID { get; set; }
         public int TipoVehiculoID { get; set; }
         public int EstadoVehiculoID { get; set; }
-        public string Capacidad { get; set; } // Cambiado a string para coincidir con SQL
-        public string Placa { get; set; } // Cambiado a string, el uso de `required` es opcional dependiendo de la versión de C#
+        public string Capacidad { get; set; } 
+        public string Placa { get; set; } 
 
-        // Relaciones con otras tablas
+   
         public virtual ModeloVehiculo ModeloVehiculo { get; set; }
         public virtual TiposVehiculo TipoVehiculo { get; set; }
         public virtual EstadosVehiculo EstadoVehiculo { get; set; }
@@ -20,10 +20,10 @@ namespace ProyectoTranSql.Models
 
     public class TiposVehiculo
     {
-        // Cambiar object a tipos específicos compatibles
-        public int TipoVehiculoID { get; set; } // Usar int para la clave primaria
+       
+        public int TipoVehiculoID { get; set; } 
 
-        public string Tipo { get; set; } // String para el nombre del tipo de vehículo
+        public string Tipo { get; set; } 
     }
 
 

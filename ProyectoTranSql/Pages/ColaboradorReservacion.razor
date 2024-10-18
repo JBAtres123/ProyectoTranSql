@@ -2,6 +2,7 @@
 @using Microsoft.EntityFrameworkCore
 @using ProyectoTranSql.Models
 @inject ProyectoTranSql.Data.MyDbContext DbContext
+@inject NavigationManager NavigationManager
 
 <head>
     <link href="css/StyleReservacion.css" rel="stylesheet" />
@@ -31,6 +32,7 @@ else
         @if (!mostrarVehiculos)
         {
             <button @onclick="CargarVehiculos">Ver Vehículos</button>
+            <button @onclick="ReservarVehiculo">Reservar Vehículo</button> <!-- Redirigir con el ColaboradorID -->
         }
         else
         {
@@ -71,7 +73,7 @@ else
     private Departamento departamento;
     private string mensajeError;
     private List<Vehiculo> vehiculos;
-    private bool mostrarVehiculos; // Variable para controlar la visibilidad de la lista
+    private bool mostrarVehiculos; // Controla la visibilidad de la lista
 
     private async Task BuscarColaborador()
     {
@@ -103,6 +105,15 @@ else
         mostrarVehiculos = false; // Ocultar la lista de vehículos
         vehiculos = null; // Opcionalmente, puedes vaciar la lista
     }
+
+    // Método para redirigir a la página de reservación con el ID del colaborador
+    private void ReservarVehiculo()
+    {
+        NavigationManager.NavigateTo($"/Reservacion");
+    }
 }
+
+
+
 
 
