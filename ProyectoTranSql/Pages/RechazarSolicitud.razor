@@ -1,0 +1,34 @@
+﻿@page "/RechazarSolicitud/{solicitudId:int}"
+@using Microsoft.EntityFrameworkCore
+@using ProyectoTranSql.Models
+@inject ProyectoTranSql.Data.MyDbContext DbContext
+
+<h3>Solicitud Rechazada</h3>
+
+@if (solicitud == null)
+{
+    <p><em>Cargando detalles...</em></p>
+}
+else
+{
+    <div>
+        <p><strong>Solicitud ID:</strong> @solicitud.SolicitudID</p>
+        <p><strong>Motivo:</strong> @solicitud.Motivo</p>
+        <p><strong>Fecha Solicitud:</strong> @solicitud.FechaSolicitud.ToShortDateString()</p>
+        <p><strong>Colaborador:</strong> @solicitud.Colaboradores?.Nombre</p>
+        <p><strong>Estado:</strong> Rechazada</p>
+    </div>
+}
+
+@code {
+    [Parameter] public int solicitudId { get; set; }
+    private SolicitudReservacion solicitud;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Cargar los detalles de la solicitud seleccionada
+        solicitud = await DbContext.SolicitudReservacion
+            .Include(s => s.Colaboradores)
+            .FirstOrDefaultAsync(s => s.SolicitudID == solicitudId);
+    }
+}

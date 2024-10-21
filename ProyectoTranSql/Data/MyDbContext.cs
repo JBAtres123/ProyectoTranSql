@@ -96,44 +96,46 @@ namespace ProyectoTranSql.Data
               
             });
 
-            // Configuración de la entidad RechazoSolicitud
+          
             modelBuilder.Entity<RechazoSolicitud>(entity =>
             {
                 entity.ToTable("RechazoSolicitud");
-                entity.HasKey(r => r.RechazoID); // Definir la clave primaria
+                entity.HasKey(r => r.RechazoID); 
                 entity.Property(r => r.Justificacion)
                  .IsRequired()
-                 .HasMaxLength(500); // Ajusta el tamaño según tus necesidades
+                 .HasMaxLength(500); 
 
                 entity.Property(r => r.FechaRechazo)
                     .IsRequired();
+
+                entity.HasOne(sr => sr.SolicitudReservacion)
+                  .WithMany()
+                     .HasForeignKey(sr => sr.SolicitudID);
             });
 
-            // Configuración de la entidad SolicitudReservacion
+           
             modelBuilder.Entity<SolicitudReservacion>(entity =>
             {
                 entity.ToTable("SolicitudReservacion");
-                entity.HasKey(sr => sr.SolicitudID); // Definir la clave primaria
+                entity.HasKey(sr => sr.SolicitudID); 
 
                 entity.HasOne(sr => sr.Colaboradores)
-                    .WithMany() // Relación con Colaborador
+                    .WithMany() 
                     .HasForeignKey(sr => sr.ColaboradorID);
 
                 entity.HasOne(sr => sr.EstadosSolicitud)
-                    .WithMany() // Relación con EstadoSolicitud
+                    .WithMany() 
                     .HasForeignKey(sr => sr.EstadoSolicitudID);
 
                 entity.HasOne(sr => sr.Destino)
-                    .WithMany() // Relación con Destino
+                    .WithMany() 
                     .HasForeignKey(sr => sr.DestinoID);
 
                 entity.HasOne(sr => sr.Piloto)
-                    .WithMany() // Relación con Piloto
+                    .WithMany() 
                     .HasForeignKey(sr => sr.PilotoID);
 
-                entity.HasOne(sr => sr.RechazoSolicitud)
-                    .WithMany() // Relación con RechazoSolicitud
-                    .HasForeignKey(sr => sr.RechazoID);
+               
             });
         }
     }

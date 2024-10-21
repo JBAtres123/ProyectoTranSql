@@ -2,91 +2,93 @@
 @using Microsoft.EntityFrameworkCore
 @using ProyectoTranSql.Models
 @inject ProyectoTranSql.Data.MyDbContext DbContext
+@inject NavigationManager Navigation
 
-<h3>Crear Solicitud de Reservación</h3>
+<link href="css/Formulario.css" rel="stylesheet" />
 
-@if (!formEnviado)
+<div class="form-container">
+    <h3>Crear Solicitud de Reservación</h3>
 
-{
-    <EditForm Model="formModel" OnValidSubmit="GuardarDatos">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
+    @if (!formEnviado)
+    {
+        <EditForm Model="formModel" OnValidSubmit="GuardarDatos">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
 
+            <div class="campo">
+                <label for="nombreDestino" class="etiqueta">Nombre del Destino:</label>
+                <InputText id="nombreDestino" @bind-Value="formModel.NombreDestino" class="form-control" required />
+            </div>
+
+            <div class="campo">
+                <label for="nombrePiloto" class="etiqueta">Responsable (Nombre del Piloto):</label>
+                <InputText id="nombrePiloto" @bind-Value="formModel.NombrePiloto" class="form-control" required />
+            </div>
+
+            <div class="campo">
+                <label for="motivo" class="etiqueta">Motivo de la Solicitud:</label>
+                <InputTextArea id="motivo" @bind-Value="formModel.Motivo" class="form-control" required />
+            </div>
+
+            <div class="campo">
+                <label for="fechaSolicitud" class="etiqueta">Fecha de la Solicitud:</label>
+                <InputDate id="fechaSolicitud" @bind-Value="formModel.FechaSolicitud" class="form-control" required />
+            </div>
+
+            <div class="campo">
+                <label for="colaboradorId" class="etiqueta">ID del Colaborador:</label>
+                <InputNumber id="colaboradorId" @bind-Value="formModel.ColaboradorID" class="form-control" required />
+            </div>
+
+            <div>
+                <button type="submit" class="btn btn-primary">Guardar Solicitud</button>
+            </div>
+        </EditForm>
+    }
+    else
+    {
+        <p class="exito">Solicitud guardada con éxito.</p>
+
+        <!-- Botones separados con espacio -->
         <div>
-            <label for="nombreDestino">Nombre del Destino:</label>
-            <InputText id="nombreDestino" @bind-Value="formModel.NombreDestino" class="form-control" />
+            <button @onclick="NuevoRegistro" class="btn btn-secondary" style="margin-right: 10px;">Crear Otra Solicitud</button>
+            <button @onclick="Terminar" class="btn btn-danger">Terminar</button>
         </div>
+    }
 
-        <div>
-            <label for="nombrePiloto">Responsable (Nombre del Piloto):</label>
-            <InputText id="nombrePiloto" @bind-Value="formModel.NombrePiloto" class="form-control" />
-        </div>
+    @if (!string.IsNullOrEmpty(mensajeError))
+    {
+        <p class="error">@mensajeError</p>
+    }
+</div>
 
-        <div>
-            <label for="motivo">Motivo de la Solicitud:</label>
-            <InputTextArea id="motivo" @bind-Value="formModel.Motivo" class="form-control" />
-        </div>
-
-        <div>
-            <label for="fechaSolicitud">Fecha de la Solicitud:</label>
-            <InputDate id="fechaSolicitud" @bind-Value="formModel.FechaSolicitud" class="form-control" />
-        </div>
-
-        <div>
-            <button type="submit" class="btn btn-primary">Guardar Solicitud</button>
-        </div>
-    </EditForm>
-}
-
-else
-
-{
-    <p>Solicitud guardada con éxito.</p>
-    <button @onclick="NuevoRegistro" class="btn btn-secondary">Crear Otra Solicitud</button>
-}
-
-@if (!string.IsNullOrEmpty(mensajeError))
-
-{
-    <p style="color:red">@mensajeError</p>
-}
 
 @code {
     private FormModel formModel = new FormModel();
-
     private bool formEnviado = false;
-
     private string mensajeError = null;
 
-
-
-
-
     private class FormModel
-
     {
-
         public string NombreDestino { get; set; }
-
         public string NombrePiloto { get; set; }
-
         public string Motivo { get; set; }
-
         public DateTime FechaSolicitud { get; set; }
-
+        public int ColaboradorID { get; set; }
     }
 
-
-
     private async Task GuardarDatos()
-
     {
-
         try
-
         {
+            // Buscar el colaborador por ID
+            var colaborador = await DbContext.Colaboradores.FindAsync(formModel.ColaboradorID);
 
-
+            if (colaborador == null)
+            {
+                mensajeError = "Colaborador no encontrado.";
+                return;
+            }
 
             var nuevoDestino = new Destino
                 {
@@ -94,12 +96,7 @@ else
                 };
 
             await DbContext.Destino.AddAsync(nuevoDestino);
-
             await DbContext.SaveChangesAsync();
-
-
-
-
 
             var nuevoPiloto = new Piloto
                 {
@@ -107,12 +104,7 @@ else
                 };
 
             await DbContext.Piloto.AddAsync(nuevoPiloto);
-
             await DbContext.SaveChangesAsync();
-
-
-
-
 
             var nuevaSolicitud = new SolicitudReservacion
                 {
@@ -120,45 +112,38 @@ else
                     FechaSolicitud = formModel.FechaSolicitud,
                     DestinoID = nuevoDestino.DestinoID,
                     PilotoID = nuevoPiloto.PilotoID,
-                    ColaboradorID = null,
-                    DepartamentoID = null,
-                    EstadoSolicitudID = null,
-                    RechazoID = null
+                    ColaboradorID = formModel.ColaboradorID, // Asignar el ID del colaborador
+                    DepartamentoID = colaborador.DepartamentoID, // Asignar el ID del departamento automáticamente
+                    EstadoSolicitudID = null, // Estado inicial, si puede ser nulo
                 };
 
             await DbContext.SolicitudReservacion.AddAsync(nuevaSolicitud);
-
             await DbContext.SaveChangesAsync();
 
-
-
             formEnviado = true;
-
         }
-
         catch (Exception ex)
-
         {
-
+            // Capturar la excepción interna para obtener más detalles del error
             mensajeError = $"Error al guardar la solicitud: {ex.Message}";
-
+            if (ex.InnerException != null)
+            {
+                mensajeError += $" Detalles: {ex.InnerException.Message}";
+            }
         }
-
     }
 
-
-
+    // Método para reiniciar el formulario
     private void NuevoRegistro()
-
     {
+        formModel = new FormModel(); // Restablecer los datos del formulario
+        formEnviado = false; // Habilitar el formulario nuevamente
+        mensajeError = null; // Limpiar mensajes de error
+    }
 
-
-
-        formModel = new FormModel();
-
-        formEnviado = false;
-
-        mensajeError = null;
-
+    // Método para redirigir al componente de login
+    private void Terminar()
+    {
+        Navigation.NavigateTo("/login");
     }
 }

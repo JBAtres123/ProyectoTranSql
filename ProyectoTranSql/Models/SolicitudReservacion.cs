@@ -17,17 +17,17 @@ namespace ProyectoTranSql.Models
         public int? DepartamentoID { get; set; } // Cambiado a Nullable si puede ser nulo
         public int DestinoID { get; set; }
         public int PilotoID { get; set; }
-        public int? RechazoID { get; set; }
+     
 
         public int? EstadoSolicitudID { get; set; }// Nullable si puede ser nulo
 
         // Propiedades de navegación
         public virtual Colaborador Colaboradores { get; set; }
-        public virtual Departamento Departamentos { get; set; } // Proporciona acceso al departamento
+        public virtual Departamento Departamentos { get; set; } 
         public virtual EstadosSolicitud EstadosSolicitud { get; set; }
         public virtual Destino Destino { get; set; }
         public virtual Piloto Piloto { get; set; }
-        public virtual RechazoSolicitud RechazoSolicitud { get; set; }
+       
     }
 
     public class EstadosSolicitud
@@ -51,11 +51,14 @@ namespace ProyectoTranSql.Models
     public class RechazoSolicitud
     {
         public int RechazoID { get; set; }
-        public int SolicitudID { get; set; }
+        public int SolicitudID { get; set; } // Foreign Key a SolicitudReservacion
         public string Justificacion { get; set; }
         public DateTime FechaRechazo { get; set; }
+
+        // Propiedad de navegación
+        public virtual SolicitudReservacion SolicitudReservacion { get; set; }
     }
 
-    
+
 }
 

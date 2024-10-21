@@ -1,4 +1,4 @@
-﻿@page "/VehiculosListAsignacion"
+﻿@page "/VehiculosList"
 @using Microsoft.EntityFrameworkCore
 @using ProyectoTranSql.Models
 @inject ProyectoTranSql.Data.MyDbContext DbContext
@@ -37,7 +37,7 @@
                     <td>@vehiculo.Capacidad</td>
                     <td>
                         <span class="estado-vehiculo @(GetEstadoCssClass(vehiculo.EstadoVehiculoID))">
-                            @vehiculo.EstadoVehiculo?.Estado
+                            @vehiculo.EstadoVehiculo.Estado
                         </span>
                     </td>
                     <td>
@@ -47,12 +47,10 @@
                         }
                         <select @onchange="(e) => CambiarEstadoVehiculo(vehiculo, e)">
                             <option value="">Cambiar Estado</option>
-                            @foreach (var estado in estados)
-                            {
-                                <option value="@estado.EstadoVehiculoID" selected="@(vehiculo.EstadoVehiculoID == estado.EstadoVehiculoID)">
-                                    @estado.Estado
-                                </option>
-                            }
+                            <option value="1">Estado 1 (Disponible)</option>
+                            <option value="2">Estado 2 (Reservado)</option>
+                            <option value="3">Estado 3 (En Ruta)</option>
+                            <option value="4">Estado 4 (Inactivo)</option>
                         </select>
                     </td>
                 </tr>
@@ -67,33 +65,23 @@ else
 
 @code {
     private List<Vehiculo> vehiculos;
-    private List<EstadosVehiculo> estados; // Lista para almacenar los estados disponibles
 
     protected override async Task OnInitializedAsync()
-    {
-        await LoadVehiculos();
-        await LoadEstados();
-    }
-
-    private async Task LoadVehiculos()
     {
         vehiculos = await DbContext.Vehiculos
             .Include(v => v.ModeloVehiculo)
             .Include(v => v.ModeloVehiculo.MarcaVehiculo)
             .Include(v => v.EstadoVehiculo)
             .Include(v => v.TipoVehiculo)
+            .Where(v => v.EstadoVehiculoID == 1 || v.EstadoVehiculoID == 2 || v.EstadoVehiculoID == 3 || v.EstadoVehiculoID == 4)
             .ToListAsync();
-    }
-
-    private async Task LoadEstados()
-    {
-        estados = await DbContext.EstadosVehiculo.ToListAsync(); // Cargar todos los estados disponibles
     }
 
     private async Task AsignarVehiculo(Vehiculo vehiculo)
     {
-        vehiculo.EstadoVehiculoID = 2; // Cambiar estado a "Reservado"
+        vehiculo.EstadoVehiculoID = 2;
 
+        DbContext.Vehiculos.Update(vehiculo);
         await DbContext.SaveChangesAsync();
 
         NavigationManager.NavigateTo($"/DetallesVehiculo/{vehiculo.VehiculoID}");
@@ -107,16 +95,13 @@ else
             vehiculo.EstadoVehiculoID = nuevoEstadoID;
 
             // Guardar cambios en la base de datos
+            DbContext.Vehiculos.Update(vehiculo);
             await DbContext.SaveChangesAsync();
 
-            // Actualizar el objeto EstadoVehiculo del vehículo desde la base de datos
-            var nuevoEstado = await DbContext.EstadosVehiculo.FindAsync(nuevoEstadoID);
-            if (nuevoEstado != null)
-            {
-                vehiculo.EstadoVehiculo = nuevoEstado; // Asignar el nuevo objeto EstadoVehiculo
-            }
+            // Actualizar el objeto EstadoVehiculo en el vehiculo directamente desde la base de datos
+            vehiculo.EstadoVehiculo = await DbContext.EstadosVehiculo.FindAsync(nuevoEstadoID);
 
-            // Actualizar la vista
+            // Aquí forzamos una actualización en la vista
             StateHasChanged();
         }
     }

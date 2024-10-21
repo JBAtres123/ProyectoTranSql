@@ -1,0 +1,88 @@
+﻿body {
+    font-family: Arial, sans-serif;
+    background-color: #f8f9fa; /* Color de fondo claro */
+    margin: 0;
+    padding: 20px;
+}
+
+h3 {
+    text-align: center;
+    color: #343a40; /* Color del texto */
+}
+
+.vehiculos-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0; /* Espaciado superior e inferior */
+}
+
+    .vehiculos-table th, .vehiculos-table td {
+        border: 1px solid #dee2e6; /* Borde ligero */
+        padding: 12px; /* Espaciado dentro de celdas */
+        text-align: left; /* Alineación a la izquierda */
+    }
+
+    .vehiculos-table th {
+        background-color: #007bff; /* Fondo azul para encabezados */
+        color: white; /* Texto blanco */
+    }
+
+    .vehiculos-table tr:nth-child(even) {
+        background-color: #f2f2f2; /* Color de fondo gris claro para filas pares */
+    }
+
+    .vehiculos-table tr:hover {
+        background-color: #e9ecef; /* Color de fondo al pasar el mouse */
+    }
+
+.estado-vehiculo {
+    font-weight: bold; /* Negrita para el estado */
+    padding: 4px 8px; /* Espaciado dentro de la etiqueta */
+    border-radius: 4px; /* Bordes redondeados */
+    color: white; /* Texto blanco */
+}
+
+/* Mantener los colores de estado originales */
+.estado-verde {
+    background-color: #28a745; /* Verde para disponible */
+}
+
+.estado-gris {
+    background-color: #6c757d; /* Gris para reservado */
+}
+
+.estado-azul-claro {
+    background-color: #17a2b8; /* Azul claro para en ruta */
+}
+
+.estado-rojo {
+    background-color: #dc3545; /* Rojo para inactivo */
+}
+
+button {
+    background-color: #007bff; /* Fondo azul para botones */
+    color: white; /* Texto blanco */
+    border: none; /* Sin borde */
+    padding: 10px 15px; /* Espaciado interno */
+    border-radius: 4px; /* Bordes redondeados */
+    cursor: pointer; /* Cambia el cursor a mano */
+    transition: background-color 0.3s; /* Transición suave al cambiar color */
+}
+
+    button:hover {
+        background-color: #0056b3; /* Color más oscuro al pasar el mouse */
+    }
+
+select {
+    padding: 10px; /* Espaciado interno */
+    border-radius: 4px; /* Bordes redondeados */
+    border: 1px solid #ced4da; /* Borde ligero */
+    width: 100%; /* Ocupa todo el ancho de la celda */
+    margin-top: 5px; /* Espaciado superior */
+    transition: border-color 0.3s; /* Transición suave al cambiar el borde */
+}
+
+    select:focus {
+        border-color: #007bff; /* Borde azul al enfocar */
+        outline: none; /* Sin contorno */
+    }
