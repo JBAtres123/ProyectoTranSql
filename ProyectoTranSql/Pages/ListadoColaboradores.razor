@@ -1,0 +1,54 @@
+﻿@page "/ListaColaboradores"
+@using ProyectoTranSql.Models
+
+@inject ProyectoTranSql.Data.MyDbContext DbContext
+
+<head>
+    <link href="css/StyleColaboradores.css" rel="stylesheet" />
+</head>
+
+<h3 class="title">Lista de Colaboradores</h3>
+
+@if (colaboradores != null && colaboradores.Any())
+{
+    <div class="table-container">
+        <table class="styled-table">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Apellido</th>
+                    <th>Correo</th>
+                    <th>Teléfono</th>
+                    <th>Departamento</th>
+                    <th>Vehículo</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var colaborador in colaboradores)
+                {
+                    <tr>
+                        <td>@colaborador.Nombre</td>
+                        <td>@colaborador.Apellido</td>
+                        <td>@colaborador.Correo</td>
+                        <td>@colaborador.Telefono</td>
+                        <td>@(colaborador.Departamento?.Nombre ?? "No asignado")</td>
+                        <td>@(colaborador.Vehiculo?.Placa ?? "No asignado")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <p class="empty-message">No hay colaboradores en la base de datos.</p>
+}
+
+@code {
+    private List<Colaborador> colaboradores;
+
+    protected override async Task OnInitializedAsync()
+    {
+        colaboradores = await DbContext.GetColaboradoresConRelacionesAsync();
+    }
+}

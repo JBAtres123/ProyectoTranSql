@@ -1,4 +1,4 @@
-﻿@page "/VehiculosList"
+﻿@page "/VehiculosListAsignacion"
 @using Microsoft.EntityFrameworkCore
 @using ProyectoTranSql.Models
 @inject ProyectoTranSql.Data.MyDbContext DbContext
@@ -37,20 +37,18 @@
                     <td>@vehiculo.Capacidad</td>
                     <td>
                         <span class="estado-vehiculo @(GetEstadoCssClass(vehiculo.EstadoVehiculoID))">
-                            @vehiculo.EstadoVehiculo.Estado
+                            @vehiculo.EstadoVehiculo?.Estado
                         </span>
                     </td>
                     <td>
-                        @if (vehiculo.EstadoVehiculoID == 1)
-                        {
-                            <button @onclick="() => AsignarVehiculo(vehiculo)">Asignar</button>
-                        }
                         <select @onchange="(e) => CambiarEstadoVehiculo(vehiculo, e)">
                             <option value="">Cambiar Estado</option>
-                            <option value="1">Estado 1 (Disponible)</option>
-                            <option value="2">Estado 2 (Reservado)</option>
-                            <option value="3">Estado 3 (En Ruta)</option>
-                            <option value="4">Estado 4 (Inactivo)</option>
+                            @foreach (var estado in estados)
+                            {
+                                <option value="@estado.EstadoVehiculoID" selected="@(vehiculo.EstadoVehiculoID == estado.EstadoVehiculoID)">
+                                    @estado.Estado
+                                </option>
+                            }
                         </select>
                     </td>
                 </tr>
@@ -65,43 +63,43 @@ else
 
 @code {
     private List<Vehiculo> vehiculos;
+    private List<EstadosVehiculo> estados;
 
     protected override async Task OnInitializedAsync()
+    {
+        await LoadVehiculos();
+        await LoadEstados();
+    }
+
+    private async Task LoadVehiculos()
     {
         vehiculos = await DbContext.Vehiculos
             .Include(v => v.ModeloVehiculo)
             .Include(v => v.ModeloVehiculo.MarcaVehiculo)
             .Include(v => v.EstadoVehiculo)
             .Include(v => v.TipoVehiculo)
-            .Where(v => v.EstadoVehiculoID == 1 || v.EstadoVehiculoID == 2 || v.EstadoVehiculoID == 3 || v.EstadoVehiculoID == 4)
             .ToListAsync();
     }
 
-    private async Task AsignarVehiculo(Vehiculo vehiculo)
+    private async Task LoadEstados()
     {
-        vehiculo.EstadoVehiculoID = 2;
-
-        DbContext.Vehiculos.Update(vehiculo);
-        await DbContext.SaveChangesAsync();
-
-        NavigationManager.NavigateTo($"/DetallesVehiculo/{vehiculo.VehiculoID}");
+        estados = await DbContext.EstadosVehiculo.ToListAsync();
     }
 
     private async Task CambiarEstadoVehiculo(Vehiculo vehiculo, ChangeEventArgs e)
     {
         if (int.TryParse(e.Value?.ToString(), out var nuevoEstadoID))
         {
-            // Actualizar el estado del vehículo en la base de datos
             vehiculo.EstadoVehiculoID = nuevoEstadoID;
 
-            // Guardar cambios en la base de datos
-            DbContext.Vehiculos.Update(vehiculo);
             await DbContext.SaveChangesAsync();
 
-            // Actualizar el objeto EstadoVehiculo en el vehiculo directamente desde la base de datos
-            vehiculo.EstadoVehiculo = await DbContext.EstadosVehiculo.FindAsync(nuevoEstadoID);
+            var nuevoEstado = await DbContext.EstadosVehiculo.FindAsync(nuevoEstadoID);
+            if (nuevoEstado != null)
+            {
+                vehiculo.EstadoVehiculo = nuevoEstado;
+            }
 
-            // Aquí forzamos una actualización en la vista
             StateHasChanged();
         }
     }

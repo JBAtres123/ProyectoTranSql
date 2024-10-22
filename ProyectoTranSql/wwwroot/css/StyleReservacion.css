@@ -1,49 +1,136 @@
-﻿body {
+﻿/* Estilo general del contenedor de la página */
+body {
     font-family: Arial, sans-serif;
-    background-color: #f7f7f7;
-}
-
-h3 {
-    color: #333;
-}
-
-.search-container, .colaborador-info, .vehiculos-list {
-    background-color: #fff;
-    border-radius: 8px;
+    background: linear-gradient(135deg, #e7e7ff, #ffffff, #d3cce3);
+    background-size: 400% 400%; /* Para el efecto de degradado completo */
+    animation: gradient 15s ease infinite;
+    margin: 0;
     padding: 20px;
+    height: 100vh; /* Ocupa toda la altura de la pantalla */
+}
+
+/* Animación del fondo */
+@keyframes gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* Títulos */
+h3 {
+    text-align: center;
+    color: #333;
     margin-bottom: 20px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-input[type="number"], input[type="text"], input[type="date"] {
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    width: 100%;
-    margin-bottom: 10px;
+h4 {
+    color: #444;
 }
 
+/* Contenedor de búsqueda de colaborador */
+.search-container {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+    .search-container label {
+        font-weight: bold;
+    }
+
+    .search-container input {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        margin-right: 10px;
+        width: 200px;
+    }
+
+/* Botones */
 button {
-    padding: 10px 15px;
-    background-color: #007bff;
-    border: none;
+    background-color: #5c6bc0; /* Color lila */
     color: white;
+    border: none;
     border-radius: 4px;
+    padding: 10px 15px;
     cursor: pointer;
+    font-size: 16px;
+    margin: 5px;
+    transition: background-color 0.3s, transform 0.2s;
 }
 
     button:hover {
-        background-color: #0056b3;
+        background-color: #3f51b5; /* Lila más oscuro */
+        transform: scale(1.05);
     }
 
-.vehiculo-item {
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    margin-bottom: 10px;
+/* Información del colaborador */
+.colaborador-info {
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    margin-bottom: 20px;
 }
 
+    /* Estilo de los párrafos dentro de la información del colaborador */
+    .colaborador-info p {
+        margin: 5px 0;
+        font-size: 16px;
+    }
+
+        .colaborador-info p strong {
+            color: #5c6bc0; /* Color lila */
+        }
+
+/* Estilo de la lista de vehículos */
 .vehiculos-list {
     display: flex;
     flex-direction: column;
+    gap: 15px;
+    max-width: 600px; /* Ancho máximo para la lista */
+    margin: 0 auto; /* Centrar la lista */
 }
+
+.vehiculo-item {
+    background-color: rgba(233, 245, 255, 0.8); /* Fondo semitransparente */
+    border: 1px solid #bcdffd;
+    border-radius: 8px;
+    padding: 15px;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+}
+
+    .vehiculo-item:hover {
+        transform: scale(1.02);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .vehiculo-item strong {
+        color: #5c6bc0; /* Color lila */
+    }
+
+/* Mensajes de error */
+p[style*="color:red"] {
+    color: red;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* Estilo del botón de notificaciones */
+button[style*="font-size: smaller"] {
+    background-color: #f44336; /* Rojo */
+    padding: 5px 10px;
+    font-size: 14px;
+}
+
+    button[style*="font-size: smaller"]:hover {
+        background-color: #d32f2f; /* Rojo oscuro */
+    }

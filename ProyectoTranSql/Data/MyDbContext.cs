@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ProyectoTranSql.Models;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace ProyectoTranSql.Data
 {
@@ -20,6 +22,15 @@ namespace ProyectoTranSql.Data
         public DbSet<Piloto> Piloto { get; set; }
         public DbSet<RechazoSolicitud> RechazoSolicitud { get; set; }
         public DbSet<SolicitudReservacion> SolicitudReservacion { get; set; }
+
+
+        public async Task<List<Colaborador>> GetColaboradoresConRelacionesAsync()
+        {
+            return await Colaboradores
+                .Include(c => c.Departamento) // Relación con el Departamento
+                .Include(c => c.Vehiculo)     // Relación con el Vehículo (si existe)
+                .ToListAsync();               // Devuelve la lista asincrónicamente
+        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

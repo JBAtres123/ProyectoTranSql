@@ -1,135 +1,122 @@
-﻿@page "/VehiculosListAsignacion"
+﻿@page "/ColaboradorReservacion"
 @using Microsoft.EntityFrameworkCore
 @using ProyectoTranSql.Models
 @inject ProyectoTranSql.Data.MyDbContext DbContext
 @inject NavigationManager NavigationManager
 
 <head>
-    <link href="css/StyleVehiculosList.css" rel="stylesheet" />
+    <link href="css/StyleReservacion.css" rel="stylesheet" />
 </head>
 
-<h3>Lista de Vehículos Disponibles</h3>
+<h3>Información del Colaborador</h3>
 
-@if (vehiculos != null && vehiculos.Any())
+@if (colaborador == null)
 {
-    <table class="vehiculos-table">
-        <thead>
-            <tr>
-                <th>Marca</th>
-                <th>Modelo</th>
-                <th>Año</th>
-                <th>Placa</th>
-                <th>Tipo de Vehículo</th>
-                <th>Capacidad</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var vehiculo in vehiculos)
-            {
-                <tr>
-                    <td>@vehiculo.ModeloVehiculo.MarcaVehiculo.Marca</td>
-                    <td>@vehiculo.ModeloVehiculo.Modelo</td>
-                    <td>@vehiculo.ModeloVehiculo.Año</td>
-                    <td>@vehiculo.Placa</td>
-                    <td>@vehiculo.TipoVehiculo.Tipo</td>
-                    <td>@vehiculo.Capacidad</td>
-                    <td>
-                        <span class="estado-vehiculo @(GetEstadoCssClass(vehiculo.EstadoVehiculoID))">
-                            @vehiculo.EstadoVehiculo?.Estado
-                        </span>
-                    </td>
-                    <td>
-                        @if (vehiculo.EstadoVehiculoID == 1)
-                        {
-                            <button @onclick="() => AsignarVehiculo(vehiculo)">Asignar</button>
-                        }
-                        <select @onchange="(e) => CambiarEstadoVehiculo(vehiculo, e)">
-                            <option value="">Cambiar Estado</option>
-                            @foreach (var estado in estados)
-                            {
-                                <option value="@estado.EstadoVehiculoID" selected="@(vehiculo.EstadoVehiculoID == estado.EstadoVehiculoID)">
-                                    @estado.Estado
-                                </option>
-                            }
-                        </select>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <div class="search-container">
+        <label for="colaboradorId">Ingrese su ID de Colaborador: </label>
+        <input type="number" @bind="colaboradorId" />
+        <button @onclick="BuscarColaborador">Buscar</button>
+    </div>
 }
 else
 {
-    <p>No hay vehículos disponibles en la base de datos.</p>
+    <div class="colaborador-info">
+        <h4>Detalles del Colaborador</h4>
+        <p><strong>ID:</strong> @colaborador.ColaboradorID</p>
+        <p><strong>Nombre:</strong> @colaborador.Nombre</p>
+        <p><strong>Apellido:</strong> @colaborador.Apellido</p>
+        <p><strong>Correo:</strong> @colaborador.Correo</p>
+        <p><strong>Teléfono:</strong> @colaborador.Telefono</p>
+        <p><strong>Departamento:</strong> @departamento?.Nombre</p>
+
+        @if (!mostrarVehiculos)
+        {
+            <button @onclick="CargarVehiculos">Ver Vehículos</button>
+            <button @onclick="ReservarVehiculo">Reservar Vehículo</button>
+        }
+        else
+        {
+            <button @onclick="OcultarVehiculos">Ocultar Lista</button>
+        }
+
+        <button @onclick="VerMisNotificaciones" style="font-size: smaller;">Mis Notificaciones</button> <!-- Botón para ver notificaciones -->
+    </div>
+
+    @if (mostrarVehiculos && vehiculos != null && vehiculos.Any())
+    {
+        <h4>Lista de Vehículos</h4>
+        <div class="vehiculos-list">
+            @foreach (var vehiculo in vehiculos)
+            {
+                <div class="vehiculo-item">
+                    <strong>Marca:</strong> @vehiculo.ModeloVehiculo.MarcaVehiculo.Marca <br />
+                    <strong>Modelo:</strong> @vehiculo.ModeloVehiculo.Modelo <br />
+                    <strong>Año:</strong> @vehiculo.ModeloVehiculo.Año <br />
+                    <strong>Placa:</strong> @vehiculo.Placa <br />
+                    <strong>Estado:</strong> @vehiculo.EstadoVehiculo.Estado
+                </div>
+            }
+        </div>
+    }
+    else if (vehiculos != null && !vehiculos.Any())
+    {
+        <p>No hay vehículos disponibles en la base de datos.</p>
+    }
+}
+
+@if (mensajeError != null)
+{
+    <p style="color:red">@mensajeError</p>
 }
 
 @code {
+    private int colaboradorId;
+    private Colaborador colaborador;
+    private Departamento departamento;
+    private string mensajeError;
     private List<Vehiculo> vehiculos;
-    private List<EstadosVehiculo> estados; // Lista para almacenar los estados disponibles
+    private bool mostrarVehiculos; // Controla la visibilidad de la lista
 
-    protected override async Task OnInitializedAsync()
+    private async Task BuscarColaborador()
     {
-        await LoadVehiculos();
-        await LoadEstados();
+        colaborador = await DbContext.Colaboradores.FindAsync(colaboradorId);
+        if (colaborador != null)
+        {
+            departamento = await DbContext.Departamentos.FindAsync(colaborador.DepartamentoID);
+            mensajeError = null;
+        }
+        else
+        {
+            mensajeError = "Colaborador no encontrado.";
+            departamento = null;
+        }
     }
 
-    private async Task LoadVehiculos()
+    private async Task CargarVehiculos()
     {
         vehiculos = await DbContext.Vehiculos
             .Include(v => v.ModeloVehiculo)
             .Include(v => v.ModeloVehiculo.MarcaVehiculo)
             .Include(v => v.EstadoVehiculo)
-            .Include(v => v.TipoVehiculo)
             .ToListAsync();
+        mostrarVehiculos = true; // Mostrar la lista de vehículos
     }
 
-    private async Task LoadEstados()
+    private void OcultarVehiculos()
     {
-        estados = await DbContext.EstadosVehiculo.ToListAsync(); // Cargar todos los estados disponibles
+        mostrarVehiculos = false; // Ocultar la lista de vehículos
+        vehiculos = null; // Opcionalmente, puedes vaciar la lista
     }
 
-    private async Task AsignarVehiculo(Vehiculo vehiculo)
+    // Método para redirigir a la página de reservación con el ID del colaborador
+    private void ReservarVehiculo()
     {
-        vehiculo.EstadoVehiculoID = 2; // Cambiar estado a "Reservado"
-
-        await DbContext.SaveChangesAsync();
-
-        NavigationManager.NavigateTo($"/DetallesVehiculo/{vehiculo.VehiculoID}");
+        NavigationManager.NavigateTo($"/FormularioReservar");
     }
 
-    private async Task CambiarEstadoVehiculo(Vehiculo vehiculo, ChangeEventArgs e)
+    // Método para ver las notificaciones
+    private void VerMisNotificaciones()
     {
-        if (int.TryParse(e.Value?.ToString(), out var nuevoEstadoID))
-        {
-            // Actualizar el estado del vehículo en la base de datos
-            vehiculo.EstadoVehiculoID = nuevoEstadoID;
-
-            // Guardar cambios en la base de datos
-            await DbContext.SaveChangesAsync();
-
-            // Actualizar el objeto EstadoVehiculo del vehículo desde la base de datos
-            var nuevoEstado = await DbContext.EstadosVehiculo.FindAsync(nuevoEstadoID);
-            if (nuevoEstado != null)
-            {
-                vehiculo.EstadoVehiculo = nuevoEstado; // Asignar el nuevo objeto EstadoVehiculo
-            }
-
-            // Actualizar la vista
-            StateHasChanged();
-        }
-    }
-
-    private string GetEstadoCssClass(int estadoId)
-    {
-        return estadoId switch
-        {
-            1 => "estado-verde",  // Disponible
-            2 => "estado-gris",   // Reservado
-            3 => "estado-azul-claro", // En Ruta
-            4 => "estado-rojo",   // Inactivo
-            _ => ""
-        };
+        NavigationManager.NavigateTo($"/NotificacionesColaborador?colaboradorId={colaboradorId}");
     }
 }

@@ -1,0 +1,87 @@
+﻿<style >
+body {
+    background: linear-gradient(90deg, #e0f7df, #d0f7e1, #e0f7df);
+    background-size: 400% 400%;
+    animation: gradientAnimation 15s ease infinite;
+    margin: 0;
+    padding: 0;
+    font-family: 'Arial', sans-serif;
+}
+
+@keyframes gradientAnimation {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.title {
+    font-size: 2.5rem;
+    text-align: center;
+    margin-top: 40px;
+    color: #4CAF50;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.table-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 40px;
+}
+
+.styled-table {
+    border-collapse: collapse;
+    font-size: 20px;
+    width: 90%;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+    .styled-table thead tr {
+        background-color: #009879;
+        color: #ffffff;
+        text-align: left;
+    }
+
+    .styled-table th,
+    .styled-table td {
+        padding: 16px 20px;
+        text-align: center;
+    }
+
+    .styled-table tbody tr {
+        border-bottom: 1px solid #dddddd;
+        background-color: #f9f9f9;
+    }
+
+        .styled-table tbody tr:nth-of-type(even) {
+            background-color: #f3f3f3;
+        }
+
+        .styled-table tbody tr:last-of-type {
+            border-bottom: 2px solid #009879;
+        }
+
+        .styled-table tbody tr:hover {
+            background-color: #d1e7dd;
+            cursor: pointer;
+        }
+
+.empty-message {
+    font-size: 1.5rem;
+    text-align: center;
+    color: #ff6f61;
+    margin-top: 40px;
+}
+
+</style >
