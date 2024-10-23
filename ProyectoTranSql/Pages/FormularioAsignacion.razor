@@ -122,8 +122,9 @@ else
     {
         vehiculo.EstadoVehiculoID = 2; // Cambiar estado a "Reservado"
         await DbContext.SaveChangesAsync();
-        NavigationManager.NavigateTo($"/DetallesVehiculo/{vehiculo.VehiculoID}/{solicitud.SolicitudID}");
 
+        // Navegar a la página de asignación pasando el solicitudId y el vehiculoID
+        NavigationManager.NavigateTo($"/AsignarVehiculo/{solicitudId}/{vehiculo.VehiculoID}");
     }
 
     private async Task CambiarEstadoVehiculo(Vehiculo vehiculo, ChangeEventArgs e)
@@ -160,3 +161,4 @@ else
         };
     }
 }
+

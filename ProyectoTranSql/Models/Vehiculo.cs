@@ -8,10 +8,10 @@ namespace ProyectoTranSql.Models
         public int ModeloVehiculoID { get; set; }
         public int TipoVehiculoID { get; set; }
         public int EstadoVehiculoID { get; set; }
-        public string Capacidad { get; set; } 
-        public string Placa { get; set; } 
+        public string Capacidad { get; set; }
+        public string Placa { get; set; }
 
-   
+
         public virtual ModeloVehiculo ModeloVehiculo { get; set; }
         public virtual TiposVehiculo TipoVehiculo { get; set; }
         public virtual EstadosVehiculo EstadoVehiculo { get; set; }
@@ -20,10 +20,10 @@ namespace ProyectoTranSql.Models
 
     public class TiposVehiculo
     {
-       
-        public int TipoVehiculoID { get; set; } 
 
-        public string Tipo { get; set; } 
+        public int TipoVehiculoID { get; set; }
+
+        public string Tipo { get; set; }
     }
 
 
@@ -55,18 +55,9 @@ namespace ProyectoTranSql.Models
         public string Estado { get; set; } // Cambiado a Estado para coincidir con la tabla
     }
 
-   
-        public class AsignacionVehiculo
-        {
-            public int AsignacionVehiculoID { get; set; }
-            public int VehiculoID { get; set; }
-            public int ColaboradorID { get; set; }
-            public DateTime FechaAsignacion { get; set; }
 
-            public Vehiculo Vehiculo { get; set; }
-            public Colaborador Colaboradore { get; set; }
-        }
-    }
+}
+
 
 
 

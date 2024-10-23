@@ -22,7 +22,7 @@ namespace ProyectoTranSql.Data
         public DbSet<Piloto> Piloto { get; set; }
         public DbSet<RechazoSolicitud> RechazoSolicitud { get; set; }
         public DbSet<SolicitudReservacion> SolicitudReservacion { get; set; }
-        public DbSet<AsignacionVehiculo> AsignacionVehiculos { get; set; }
+        public DbSet<AsignacionVehiculo> AsignacionVehiculo { get; set; }
 
         public async Task<List<Colaborador>> GetColaboradoresConRelacionesAsync()
         {

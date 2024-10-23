@@ -1,0 +1,133 @@
+﻿@page "/AsignarVehiculo/{solicitudId:int}/{vehiculoId:int}"
+@using ProyectoTranSql.Models
+@using Microsoft.EntityFrameworkCore
+@inject ProyectoTranSql.Data.MyDbContext DbContext
+@inject NavigationManager NavigationManager
+
+<h3>Asignar Vehículo</h3>
+
+@if (asignacion == null)
+{
+    <p><em>Cargando datos...</em></p>
+}
+else
+{
+    <EditForm Model="@asignacion" OnValidSubmit="GuardarAsignacion">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <p>Colaborador: @asignacion.ColaboradorID</p>
+        <p>Vehículo: @asignacion.VehiculoID</p>
+
+        <button type="submit" class="btn btn-primary">Guardar Asignación</button>
+    </EditForm>
+}
+
+@code {
+    [Parameter] public int solicitudId { get; set; }
+    [Parameter] public int vehiculoId { get; set; }
+    private AsignacionVehiculo asignacion;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine($"solicitudId: {solicitudId}, vehiculoId: {vehiculoId}");
+
+        try
+        {
+            // Espera un segundo antes de proceder
+            await Task.Delay(1000);
+
+            // Inicializar la asignación solo si todo está cargado correctamente
+            var colaboradorID = await ObtenerColaboradorID(solicitudId);
+            Console.WriteLine($"colaboradorID: {colaboradorID}");
+
+            if (colaboradorID.HasValue) // Comprueba si colaboradorID tiene un valor
+            {
+                asignacion = new AsignacionVehiculo
+                    {
+                        ColaboradorID = colaboradorID.Value, // Usa el valor de int?
+                        VehiculoID = vehiculoId,
+                        FechaAsignacion = DateTime.Now
+                    };
+                Console.WriteLine($"Asignación inicializada: ColaboradorID = {asignacion.ColaboradorID}, VehiculoID = {asignacion.VehiculoID}");
+            }
+            else
+            {
+                Console.WriteLine("No se encontró un colaborador con el ID de solicitud dado.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar la asignación: {ex.Message}");
+        }
+    }
+
+    private async Task<int?> ObtenerColaboradorID(int solicitudId)
+    {
+        Console.WriteLine($"Buscando solicitud con ID: {solicitudId}");
+
+        var solicitud = await DbContext.SolicitudReservacion
+            .Include(s => s.Colaboradores)
+            .FirstOrDefaultAsync(s => s.SolicitudID == solicitudId);
+
+        if (solicitud == null)
+        {
+            Console.WriteLine($"No se encontró una solicitud con el ID {solicitudId}");
+            return null; // Devuelve null si no se encuentra
+        }
+        else
+        {
+            Console.WriteLine($"Solicitud encontrada, ColaboradorID: {solicitud.ColaboradorID}");
+            return solicitud.ColaboradorID; // Devuelve el ID del colaborador
+        }
+    }
+
+    private async Task GuardarAsignacion()
+    {
+        try
+        {
+            // Verifica si el VehiculoID es válido
+            var vehiculo = await DbContext.Vehiculos.FindAsync(asignacion.VehiculoID);
+            if (vehiculo == null)
+            {
+                Console.WriteLine($"El VehiculoID {asignacion.VehiculoID} no existe.");
+                return; // Salir si el vehículo no existe
+            }
+
+            if (asignacion != null)
+            {
+                Console.WriteLine($"Guardando asignación: ColaboradorID: {asignacion.ColaboradorID}, VehiculoID: {asignacion.VehiculoID}");
+
+                // Agregar la asignación a la base de datos
+                DbContext.AsignacionVehiculo.Add(asignacion);
+                await DbContext.SaveChangesAsync();
+
+                // Actualizar el vehículo del colaborador
+                var colaborador = await DbContext.Colaboradores.FindAsync(asignacion.ColaboradorID);
+                if (colaborador != null)
+                {
+                    colaborador.VehiculoID = asignacion.VehiculoID;
+                    await DbContext.SaveChangesAsync();
+                    Console.WriteLine($"Vehículo asignado al colaborador: {colaborador.Nombre} {colaborador.Apellido}");
+                }
+                else
+                {
+                    Console.WriteLine($"No se encontró un colaborador con ID: {asignacion.ColaboradorID}");
+                }
+
+                // Redirigir a la página de visualización
+                NavigationManager.NavigateTo("/VerReservarcion");
+            }
+            else
+            {
+                Console.WriteLine("La asignación es nula. No se puede guardar.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al guardar la asignación: {ex.Message}");
+        }
+    }
+}
+
+

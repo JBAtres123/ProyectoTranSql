@@ -31,6 +31,8 @@ namespace ProyectoTranSql.Models
     }
 
     public class EstadosSolicitud
+
+
     {
         public int EstadoSolicitudID { get; set; }
         public string SolicitudEstado { get; set; }
