@@ -122,7 +122,8 @@ else
     {
         vehiculo.EstadoVehiculoID = 2; // Cambiar estado a "Reservado"
         await DbContext.SaveChangesAsync();
-        NavigationManager.NavigateTo($"/DetallesVehiculo/{vehiculo.VehiculoID}");
+        NavigationManager.NavigateTo($"/DetallesVehiculo/{vehiculo.VehiculoID}/{solicitud.SolicitudID}");
+
     }
 
     private async Task CambiarEstadoVehiculo(Vehiculo vehiculo, ChangeEventArgs e)

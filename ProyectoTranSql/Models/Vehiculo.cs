@@ -55,5 +55,19 @@ namespace ProyectoTranSql.Models
         public string Estado { get; set; } // Cambiado a Estado para coincidir con la tabla
     }
 
-}
+   
+        public class AsignacionVehiculo
+        {
+            public int AsignacionVehiculoID { get; set; }
+            public int VehiculoID { get; set; }
+            public int ColaboradorID { get; set; }
+            public DateTime FechaAsignacion { get; set; }
+
+            public Vehiculo Vehiculo { get; set; }
+            public Colaborador Colaboradore { get; set; }
+        }
+    }
+
+
+
 
