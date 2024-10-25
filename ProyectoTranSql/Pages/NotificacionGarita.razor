@@ -1,0 +1,52 @@
+﻿@page "/garita-notifications"
+@using ProyectoTranSql.Models
+@using Microsoft.EntityFrameworkCore
+@inject ProyectoTranSql.Data.MyDbContext DbContext
+
+<link href="css/StyleGarita.css" rel="stylesheet" />
+
+<h3>Notificaciones de Garita</h3>
+
+@if (notificaciones == null)
+{
+    <p><em>Cargando notificaciones...</em></p>
+}
+else if (notificaciones.Count == 0)
+{
+    <p><em>No hay notificaciones.</em></p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Descripción</th>
+                <th>Fecha</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var notificacion in notificaciones)
+            {
+                <tr>
+                    <td>@notificacion.GaritaID</td>
+                    <td>@notificacion.NotificacionGarita</td>
+                    <td>@notificacion.FechaNotificacion.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<GaritaControl> notificaciones;
+
+    protected override async Task OnInitializedAsync()
+    {
+        notificaciones = await DbContext.GaritaControl
+            .OrderByDescending(n => n.FechaNotificacion) // Ordenar por fecha
+            .ToListAsync(); // Obtener todas las notificaciones
+    }
+}
+
+

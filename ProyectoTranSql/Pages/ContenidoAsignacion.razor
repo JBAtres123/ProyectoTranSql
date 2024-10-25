@@ -16,17 +16,27 @@ else
         <DataAnnotationsValidator />
         <ValidationSummary />
 
+        <p>Solicitud: @solicitudId</p> <!-- Mostrar SolicitudID -->
         <p>Colaborador: @asignacion.ColaboradorID</p>
         <p>Vehículo: @asignacion.VehiculoID</p>
 
-        <button type="submit" class="btn btn-primary">Guardar Asignación</button>
+        <button type="submit" class="btn btn-primary" disabled="@isSubmitting">Guardar Asignación</button>
     </EditForm>
+}
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger" role="alert">
+        @errorMessage
+    </div>
 }
 
 @code {
     [Parameter] public int solicitudId { get; set; }
     [Parameter] public int vehiculoId { get; set; }
     private AsignacionVehiculo asignacion;
+    private string errorMessage; // Campo para almacenar mensajes de error
+    private bool isSubmitting; // Para controlar el estado del botón de envío
 
     protected override async Task OnInitializedAsync()
     {
@@ -34,18 +44,16 @@ else
 
         try
         {
-            // Espera un segundo antes de proceder
             await Task.Delay(1000);
 
-            // Inicializar la asignación solo si todo está cargado correctamente
             var colaboradorID = await ObtenerColaboradorID(solicitudId);
             Console.WriteLine($"colaboradorID: {colaboradorID}");
 
-            if (colaboradorID.HasValue) // Comprueba si colaboradorID tiene un valor
+            if (colaboradorID.HasValue)
             {
                 asignacion = new AsignacionVehiculo
                     {
-                        ColaboradorID = colaboradorID.Value, // Usa el valor de int?
+                        ColaboradorID = colaboradorID.Value,
                         VehiculoID = vehiculoId,
                         FechaAsignacion = DateTime.Now
                     };
@@ -58,7 +66,8 @@ else
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error al cargar la asignación: {ex.Message}");
+            errorMessage = $"Error al cargar la asignación: {ex.Message}"; // Almacena el mensaje de error
+            Console.WriteLine(errorMessage);
         }
     }
 
@@ -73,61 +82,113 @@ else
         if (solicitud == null)
         {
             Console.WriteLine($"No se encontró una solicitud con el ID {solicitudId}");
-            return null; // Devuelve null si no se encuentra
+            return null;
         }
         else
         {
             Console.WriteLine($"Solicitud encontrada, ColaboradorID: {solicitud.ColaboradorID}");
-            return solicitud.ColaboradorID; // Devuelve el ID del colaborador
+            return solicitud.ColaboradorID;
         }
     }
 
     private async Task GuardarAsignacion()
     {
+        isSubmitting = true; // Activar estado de envío
+
+        // Verifica que los IDs no sean nulos
+        if (!asignacion.ColaboradorID.HasValue || !asignacion.VehiculoID.HasValue)
+        {
+            errorMessage = "ColaboradorID o VehiculoID son nulos.";
+            Console.WriteLine(errorMessage);
+            isSubmitting = false; // Desactivar estado de envío
+            return;
+        }
+
+        // Iniciar una transacción
+        using var transaction = await DbContext.Database.BeginTransactionAsync();
+
         try
         {
             // Verifica si el VehiculoID es válido
             var vehiculo = await DbContext.Vehiculos.FindAsync(asignacion.VehiculoID);
             if (vehiculo == null)
             {
-                Console.WriteLine($"El VehiculoID {asignacion.VehiculoID} no existe.");
+                errorMessage = $"El VehiculoID {asignacion.VehiculoID} no existe.";
+                Console.WriteLine(errorMessage);
+                isSubmitting = false; // Desactivar estado de envío
                 return; // Salir si el vehículo no existe
             }
 
-            if (asignacion != null)
+            // Guardar la asignación
+            Console.WriteLine($"Guardando asignación: ColaboradorID: {asignacion.ColaboradorID}, VehiculoID: {asignacion.VehiculoID}");
+            DbContext.AsignacionVehiculo.Add(asignacion);
+            await DbContext.SaveChangesAsync();
+
+            // Actualizar el vehículo del colaborador
+            var colaborador = await DbContext.Colaboradores.FindAsync(asignacion.ColaboradorID);
+            if (colaborador != null)
             {
-                Console.WriteLine($"Guardando asignación: ColaboradorID: {asignacion.ColaboradorID}, VehiculoID: {asignacion.VehiculoID}");
-
-                // Agregar la asignación a la base de datos
-                DbContext.AsignacionVehiculo.Add(asignacion);
+                colaborador.VehiculoID = asignacion.VehiculoID;
                 await DbContext.SaveChangesAsync();
-
-                // Actualizar el vehículo del colaborador
-                var colaborador = await DbContext.Colaboradores.FindAsync(asignacion.ColaboradorID);
-                if (colaborador != null)
-                {
-                    colaborador.VehiculoID = asignacion.VehiculoID;
-                    await DbContext.SaveChangesAsync();
-                    Console.WriteLine($"Vehículo asignado al colaborador: {colaborador.Nombre} {colaborador.Apellido}");
-                }
-                else
-                {
-                    Console.WriteLine($"No se encontró un colaborador con ID: {asignacion.ColaboradorID}");
-                }
-
-                // Redirigir a la página de visualización
-                NavigationManager.NavigateTo("/VerReservarcion");
+                Console.WriteLine($"Vehículo asignado al colaborador: {colaborador.Nombre} {colaborador.Apellido}");
             }
             else
             {
-                Console.WriteLine("La asignación es nula. No se puede guardar.");
+                errorMessage = $"No se encontró un colaborador con ID: {asignacion.ColaboradorID}";
+                Console.WriteLine(errorMessage);
+                isSubmitting = false; // Desactivar estado de envío
+                return;
             }
+
+            // Crear una notificación
+            var notificacion = new NotificacionColaborador
+                {
+                    SolicitudID = solicitudId,
+                    AsignacionVehiculoID = asignacion.AsignacionVehiculoID,
+                    ColaboradorID = asignacion.ColaboradorID, // Asigna el ColaboradorID aquí
+                    Informacion = $"El vehículo {asignacion.VehiculoID} ha sido asignado al colaborador {colaborador.Nombre} {colaborador.Apellido}.",
+                    FechaHora = DateTime.Now
+                };
+
+
+            // Agregar la notificación a la base de datos
+            DbContext.NotificacionColaborador.Add(notificacion);
+            await DbContext.SaveChangesAsync();
+
+            // Agregar registro a GaritaControl
+            var garitaControl = new GaritaControl
+                {
+                    AsignacionVehiculoID = asignacion.AsignacionVehiculoID, // Usar el ID de asignación recién creado
+                    NotificacionGarita = $"El vehículo {asignacion.VehiculoID} ha sido asignado.",
+                    FechaNotificacion = DateTime.Now
+                };
+
+            // Guardar GaritaControl
+            DbContext.GaritaControl.Add(garitaControl);
+            await DbContext.SaveChangesAsync();
+
+            // Confirmar la transacción
+            await transaction.CommitAsync();
+
+            // Redirigir a la página de visualización
+            NavigationManager.NavigateTo("/VerReservarcion");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error al guardar la asignación: {ex.Message}");
+            await transaction.RollbackAsync();
+            errorMessage = $"Error al guardar la asignación: {ex.Message}. InnerException: {ex.InnerException?.Message}";
+            Console.WriteLine(errorMessage);
+            if (ex.InnerException?.InnerException != null)
+            {
+                Console.WriteLine($"InnerException: {ex.InnerException.InnerException.Message}");
+            }
+        }
+        finally
+        {
+            isSubmitting = false; // Desactivar estado de envío en cualquier caso
         }
     }
-}
 
+
+}
 

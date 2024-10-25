@@ -71,17 +71,16 @@ else
 
     private async Task AprobarSolicitud(int solicitudId)
     {
-        // Cambiar el estado de la solicitud a "Aprobada" y redirigir
         await CambiarEstado(solicitudId, 1); // Estado Aprobado
         NavigationManager.NavigateTo($"/AprobarSolicitud/{solicitudId}");
     }
 
     private async Task RechazarSolicitud(int solicitudId)
     {
-        // Cambiar el estado de la solicitud a "Rechazada" y redirigir
         await CambiarEstado(solicitudId, 2); // Estado Rechazado
         NavigationManager.NavigateTo($"/RechazarSolicitud/{solicitudId}");
     }
+
 
     private async Task CambiarEstado(int solicitudId, int nuevoEstado)
     {

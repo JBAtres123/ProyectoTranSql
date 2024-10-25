@@ -1,0 +1,59 @@
+﻿@page "/NotificacionesColaborador"
+@using Microsoft.EntityFrameworkCore
+@using ProyectoTranSql.Models
+@inject ProyectoTranSql.Data.MyDbContext DbContext
+@inject NavigationManager NavigationManager
+
+<head>
+    <link href="css/StyleNotificaciones.css" rel="stylesheet" />
+</head>
+
+<h3>Notificaciones del Colaborador</h3>
+
+@if (notificaciones == null)
+{
+    <p><em>Cargando notificaciones...</em></p>
+}
+else if (notificaciones.Count == 0)
+{
+    <p>No hay notificaciones para mostrar.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Solicitud ID</th>
+                <th>Asignación Vehículo ID</th>
+                <th>Información</th>
+                <th>Fecha y Hora</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var notificacion in notificaciones)
+            {
+                <tr>
+                    <td>@notificacion.SolicitudID</td>
+                    <td>@notificacion.AsignacionVehiculoID</td>
+                    <td>@notificacion.Informacion</td>
+                    <td>@notificacion.FechaHora.ToString("g")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter] public int colaboradorId { get; set; }
+    private List<NotificacionColaborador> notificaciones;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        colaboradorId = int.Parse(Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query)["colaboradorId"]);
+
+        notificaciones = await DbContext.NotificacionColaborador
+            .Where(n => n.ColaboradorID == colaboradorId)
+            .ToListAsync();
+    }
+}

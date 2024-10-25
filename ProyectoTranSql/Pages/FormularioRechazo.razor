@@ -1,0 +1,81 @@
+﻿@page "/RechazarSolicitud/{solicitudId:int}"
+@using Microsoft.EntityFrameworkCore
+@using ProyectoTranSql.Models
+@inject ProyectoTranSql.Data.MyDbContext DbContext
+@inject NavigationManager NavigationManager
+
+<h3>Rechazar Solicitud</h3>
+
+@if (rechazoSolicitud == null)
+{
+    <p><em>Cargando...</em></p>
+}
+else
+{
+    <EditForm Model="@rechazoSolicitud" OnValidSubmit="GuardarRechazo">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-group">
+            <label for="solicitudId">ID Solicitud</label>
+            <InputNumber id="solicitudId" class="form-control"
+                         @bind-Value="rechazoSolicitud.SolicitudID"
+                         Disabled="true" />
+        </div>
+
+        <div class="form-group">
+            <label for="colaboradorId">ID Colaborador</label>
+            <InputNumber id="colaboradorId" class="form-control"
+                         @bind-Value="rechazoSolicitud.ColaboradorID"
+                         Disabled="true" />
+        </div>
+
+        <div class="form-group">
+            <label for="justificacion">Justificación</label>
+            <InputTextArea id="justificacion" class="form-control"
+                           @bind-Value="rechazoSolicitud.Justificacion"
+                           placeholder="Escriba la justificación del rechazo" />
+        </div>
+
+        <div class="form-group">
+            <label for="fechaRechazo">Fecha de Rechazo</label>
+            <InputDate id="fechaRechazo" class="form-control"
+                       @bind-Value="rechazoSolicitud.FechaRechazo"
+                       Disabled="true" />
+        </div>
+
+        <button type="submit" class="btn btn-danger">Guardar Rechazo</button>
+    </EditForm>
+}
+
+@code {
+    [Parameter] public int solicitudId { get; set; }
+    private RechazoSolicitud rechazoSolicitud;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var solicitud = await DbContext.SolicitudReservacion
+            .Include(s => s.Colaboradores)
+            .FirstOrDefaultAsync(s => s.SolicitudID == solicitudId);
+
+        if (solicitud != null)
+        {
+            rechazoSolicitud = new RechazoSolicitud
+                {
+                    SolicitudID = solicitud.SolicitudID,
+                    ColaboradorID = solicitud.Colaboradores?.ColaboradorID,
+                    FechaRechazo = DateTime.Now
+                };
+        }
+    }
+
+    private async Task GuardarRechazo()
+    {
+        if (rechazoSolicitud != null)
+        {
+            DbContext.RechazoSolicitud.Add(rechazoSolicitud);
+            await DbContext.SaveChangesAsync();
+            NavigationManager.NavigateTo("/VerReservacion");
+        }
+    }
+}

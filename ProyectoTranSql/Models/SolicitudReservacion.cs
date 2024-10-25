@@ -53,11 +53,13 @@ namespace ProyectoTranSql.Models
     public class RechazoSolicitud
     {
         public int RechazoID { get; set; }
+        public int? ColaboradorID { get; set; }
         public int SolicitudID { get; set; } // Foreign Key a SolicitudReservacion
         public string Justificacion { get; set; }
         public DateTime FechaRechazo { get; set; }
 
-        // Propiedad de navegación
+
+        public virtual Colaborador Colaboradores { get; set; }
         public virtual SolicitudReservacion SolicitudReservacion { get; set; }
     }
 

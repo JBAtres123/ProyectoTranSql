@@ -23,6 +23,9 @@ namespace ProyectoTranSql.Data
         public DbSet<RechazoSolicitud> RechazoSolicitud { get; set; }
         public DbSet<SolicitudReservacion> SolicitudReservacion { get; set; }
         public DbSet<AsignacionVehiculo> AsignacionVehiculo { get; set; }
+        public DbSet<GaritaControl> GaritaControl { get; set; }
+
+        public DbSet<NotificacionColaborador> NotificacionColaborador { get; set; }
 
         public async Task<List<Colaborador>> GetColaboradoresConRelacionesAsync()
         {
@@ -121,6 +124,9 @@ namespace ProyectoTranSql.Data
                 entity.HasOne(sr => sr.SolicitudReservacion)
                     .WithMany()
                     .HasForeignKey(sr => sr.SolicitudID);
+                entity.HasOne(sr => sr.Colaboradores)
+                    .WithMany()
+                    .HasForeignKey(sr => sr.ColaboradorID);
             });
 
             // Configuración de la entidad SolicitudReservacion
@@ -162,6 +168,47 @@ namespace ProyectoTranSql.Data
                 entity.HasOne(av => av.Colaboradores)
                       .WithMany()
                       .HasForeignKey(av => av.ColaboradorID);
+            });
+
+            // Configuración de la entidad GaritaControl
+            modelBuilder.Entity<GaritaControl>(entity =>
+            {
+                entity.ToTable("GaritaControl");
+                entity.HasKey(gc => gc.GaritaID);
+
+                entity.Property(gc => gc.NotificacionGarita)
+                      .IsRequired()
+                      .HasMaxLength(500);
+
+                entity.Property(gc => gc.FechaNotificacion)
+                      .IsRequired();
+
+                entity.HasOne(gc => gc.AsignacionVehiculo)
+                      .WithMany()
+                      .HasForeignKey(gc => gc.AsignacionVehiculoID);
+            });
+
+            modelBuilder.Entity<NotificacionColaborador>(entity =>
+            {
+                entity.ToTable("NotificacionColaborador");
+                entity.HasKey(n => n.NotificacionID);
+                entity.Property(n => n.Informacion) // Cambiado a 'Informacion'
+                    .IsRequired()
+                    .HasMaxLength(500);
+                entity.Property(n => n.FechaHora)
+                    .IsRequired();
+
+                entity.HasOne(n => n.AsignacionVehiculo) // Cambiado a 'Colaboradores'
+                      .WithMany()
+                      .HasForeignKey(n => n.AsignacionVehiculoID);
+
+                entity.HasOne(n => n.SolicitudReservacion) // Añadida relación con SolicitudReservacion
+                      .WithMany()
+                      .HasForeignKey(n => n.SolicitudID);
+                entity.HasOne(n => n.Colaboradores) // Nueva relación con Colaborador
+                   .WithMany() // Asumiendo que `Colaborador` puede tener muchas notificaciones
+                   .HasForeignKey(n => n.ColaboradorID)
+                   .OnDelete(DeleteBehavior.Restrict);
             });
         }
     }
