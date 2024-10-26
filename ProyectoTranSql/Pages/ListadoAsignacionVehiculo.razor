@@ -1,0 +1,66 @@
+﻿@page "/asignaciones"
+@using ProyectoTranSql.Models
+@using Microsoft.EntityFrameworkCore
+@inject ProyectoTranSql.Data.MyDbContext DbContext
+@inject NavigationManager NavigationManager
+
+<head>
+    <link href="css/AsignacionLista.css" rel="stylesheet" />
+</head>
+
+<h3>Lista de Asignaciones de Vehículos</h3>
+
+@if (asignaciones == null)
+{
+    <p><em>Cargando...</em></p>
+}
+else if (!asignaciones.Any())
+{
+    <p>No hay asignaciones de vehículos disponibles.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID Asignación</th>
+                <th>Colaborador</th>
+                <th>Vehículo</th>
+                <th>Fecha de Asignación</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var asignacion in asignaciones)
+            {
+                <tr>
+                    <td>@asignacion.AsignacionVehiculoID</td>
+                    <td>@asignacion.Colaboradores?.Nombre</td>
+                    <td>@asignacion.Vehiculo?.VehiculoID</td>
+                    <td>@asignacion.FechaAsignacion.ToString("dd/MM/yyyy")</td>
+                    <td>
+                        <button class="btn btn-primary" @onclick="() => Inspeccionar(asignacion.AsignacionVehiculoID)">Inspeccionar</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<AsignacionVehiculo> asignaciones;
+
+    protected override async Task OnInitializedAsync()
+    {
+        asignaciones = await DbContext.AsignacionVehiculo
+            .Include(a => a.Colaboradores)
+            .Include(a => a.Vehiculo)
+            .ToListAsync();
+    }
+
+    private void Inspeccionar(int asignacionId)
+    {
+        // Redirige a la página de inspección usando el ID de la asignación
+        NavigationManager.NavigateTo($"/inspeccionar/{asignacionId}");
+    }
+}

@@ -4,55 +4,65 @@
 @inject ProyectoTranSql.Data.MyDbContext DbContext
 @inject NavigationManager NavigationManager
 
-<h3>Listado de Solicitudes de Reservación</h3>
+<link href="css/StyleVerReservacion.css" rel="stylesheet" />
 
-@if (solicitudes == null)
-{
-    <p><em>Cargando datos...</em></p>
-}
-else if (!solicitudes.Any())
-{
-    <p>No se encontraron solicitudes.</p>
-}
-else
-{
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Solicitud ID</th>
-                <th>Motivo</th>
-                <th>Fecha Solicitud</th>
-                <th>Colaborador</th>
-                <th>Departamento</th>
-                <th>Estado de Solicitud</th>
-                <th>Destino</th>
-                <th>Piloto</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var solicitud in solicitudes)
-            {
-                <tr>
-                    <td>@solicitud.SolicitudID</td>
-                    <td>@solicitud.Motivo</td>
-                    <td>@solicitud.FechaSolicitud.ToShortDateString()</td>
-                    <td>@solicitud.Colaboradores?.Nombre</td>
-                    <td>@solicitud.Departamentos?.Nombre</td>
-                    <td>@solicitud.EstadosSolicitud?.SolicitudEstado</td>
-                    <td>@solicitud.Destino?.NombreDestino</td>
-                    <td>@solicitud.Piloto?.NombrePiloto</td>
-                    <td>
-                        <div class="d-flex justify-content-between">
-                            <button class="btn btn-success btn-sm me-1" @onclick="() => AprobarSolicitud(solicitud.SolicitudID)">Aprobada</button>
-                            <button class="btn btn-danger btn-sm me-1" @onclick="() => RechazarSolicitud(solicitud.SolicitudID)">Rechazada</button>
-                        </div>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <!-- Botón "Inicio" en la parte superior izquierda -->
+        <button class="btn btn-primary btn-circle" @onclick="IrInicio">Inicio</button>
+        <h3>Listado de Solicitudes de Reservación</h3>
+    </div>
+
+    @if (solicitudes == null)
+    {
+        <div class="alert alert-info">Cargando datos...</div>
+    }
+    else if (!solicitudes.Any())
+    {
+        <div class="alert alert-warning">No se encontraron solicitudes.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Solicitud ID</th>
+                        <th>Motivo</th>
+                        <th>Fecha Solicitud</th>
+                        <th>Colaborador</th>
+                        <th>Departamento</th>
+                        <th>Estado de Solicitud</th>
+                        <th>Destino</th>
+                        <th>Piloto</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var solicitud in solicitudes)
+                    {
+                        <tr>
+                            <td>@solicitud.SolicitudID</td>
+                            <td>@solicitud.Motivo</td>
+                            <td>@solicitud.FechaSolicitud.ToShortDateString()</td>
+                            <td>@solicitud.Colaboradores?.Nombre</td>
+                            <td>@solicitud.Departamentos?.Nombre</td>
+                            <td>@solicitud.EstadosSolicitud?.SolicitudEstado</td>
+                            <td>@solicitud.Destino?.NombreDestino</td>
+                            <td>@solicitud.Piloto?.NombrePiloto</td>
+                            <td>
+                                <div class="d-flex justify-content-between">
+                                    <button class="btn btn-success btn-sm me-1" @onclick="() => AprobarSolicitud(solicitud.SolicitudID)">Aprobar</button>
+                                    <button class="btn btn-danger btn-sm me-1" @onclick="() => RechazarSolicitud(solicitud.SolicitudID)">Rechazar</button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
 
 @code {
     private List<SolicitudReservacion> solicitudes;
@@ -81,7 +91,6 @@ else
         NavigationManager.NavigateTo($"/RechazarSolicitud/{solicitudId}");
     }
 
-
     private async Task CambiarEstado(int solicitudId, int nuevoEstado)
     {
         // Buscar la solicitud en la base de datos
@@ -105,7 +114,10 @@ else
                 .ToListAsync();
         }
     }
+
+    // Método para redirigir a la página de inicio
+    private void IrInicio()
+    {
+        NavigationManager.NavigateTo("/LogisticaTrans"); // Cambia "/Inicio" a la ruta deseada
+    }
 }
-
-
-

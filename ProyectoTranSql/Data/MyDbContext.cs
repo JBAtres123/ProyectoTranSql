@@ -27,6 +27,12 @@ namespace ProyectoTranSql.Data
 
         public DbSet<NotificacionColaborador> NotificacionColaborador { get; set; }
 
+        public DbSet<EstadoAccesorios> EstadoAccesorios { get; set; }
+        public DbSet<Accesorios> Accesorios { get; set; }
+        public DbSet<AccesorioVehiculo> AccesorioVehiculo { get; set; }
+
+        public DbSet<Inspeccion> Inspeccion { get; set; }
+
         public async Task<List<Colaborador>> GetColaboradoresConRelacionesAsync()
         {
             return await Colaboradores
@@ -209,6 +215,81 @@ namespace ProyectoTranSql.Data
                    .WithMany() // Asumiendo que `Colaborador` puede tener muchas notificaciones
                    .HasForeignKey(n => n.ColaboradorID)
                    .OnDelete(DeleteBehavior.Restrict);
+               // entity.HasOne(n => n.RechazoSolicitud) // Asumiendo que ya tienes la propiedad de navegación
+                     //.WithMany() // Asumiendo que RechazoSolicitud puede tener muchas notificaciones
+                     //.HasForeignKey(n => n.RechazoID) // Aquí se establece la clave foránea
+                     //.OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // Configuración de la entidad EstadoAccesorios
+            modelBuilder.Entity<EstadoAccesorios>(entity =>
+            {
+                entity.ToTable("EstadoAccesorios");
+                entity.HasKey(ea => ea.EstadoAccesorioID);
+                entity.Property(ea => ea.AccesorioEstado)
+                      .IsRequired()
+                      .HasMaxLength(20);
+            });
+
+            // Configuración de la entidad Accesorios
+            modelBuilder.Entity<Accesorios>(entity =>
+            {
+                entity.ToTable("Accesorios");
+                entity.HasKey(a => a.AccesorioID);
+                entity.Property(a => a.NombreAccesorio)
+                      .IsRequired()
+                      .HasMaxLength(50);
+            });
+
+            // Configuración de la entidad AccesorioVehiculo
+            modelBuilder.Entity<AccesorioVehiculo>(entity =>
+            {
+                entity.ToTable("AccesorioVehiculo");
+                entity.HasKey(av => av.AccesorioVehiculoID);
+
+                entity.HasOne(av => av.Vehiculo)
+                      .WithMany()
+                      .HasForeignKey(av => av.VehiculoID);
+
+                entity.HasOne(av => av.Accesorio)
+                      .WithMany()
+                      .HasForeignKey(av => av.AccesorioID);
+
+                entity.HasOne(av => av.EstadoAccesorio)
+                      .WithMany()
+                      .HasForeignKey(av => av.EstadoAccesorioID);
+            });
+
+            modelBuilder.Entity<Inspeccion>(entity =>
+            {
+                entity.ToTable("Inspeccion");
+                entity.HasKey(i => i.InspeccionID);
+                entity.Property(i => i.NombreResponsableEntrega)
+                      .IsRequired()
+                      .HasMaxLength(100);
+                entity.Property(i => i.KilometrajeInicial)
+                      .IsRequired()
+                      .HasColumnType("decimal(30, 2)");
+                entity.Property(i => i.NombreResponsableRecepcion)
+                      .IsRequired()
+                      .HasMaxLength(100);
+                entity.Property(i => i.KilometrajeFinal)
+                      .IsRequired()
+                      .HasColumnType("decimal(30, 2)");
+                entity.Property(i => i.Observaciones)
+                      .HasMaxLength(200);
+
+                entity.HasOne(i => i.AsignacionVehiculo)
+                      .WithMany()
+                      .HasForeignKey(i => i.AsignacionVehiculoID)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_Inspeccion_AsignacionVehiculo");
+
+                entity.HasOne(i => i.AccesorioVehiculo)
+                      .WithMany()
+                      .HasForeignKey(i => i.AccesorioVehiculoID)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_Inspeccion_AccesorioVehiculo");
             });
         }
     }

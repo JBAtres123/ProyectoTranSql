@@ -1,0 +1,117 @@
+﻿@page "/Inspeccionar/{asignacionId:int}"
+@using ProyectoTranSql.Models
+@using Microsoft.EntityFrameworkCore
+@inject ProyectoTranSql.Data.MyDbContext DbContext
+@inject NavigationManager NavigationManager // Inyectar NavigationManager
+
+<h3>Registrar Inspección</h3>
+
+@if (asignacion == null)
+{
+    <p><em>Cargando...</em></p>
+}
+else
+{
+    <EditForm Model="inspeccion" OnValidSubmit="RegistrarInspeccion">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <h4>Detalles de la Inspección</h4>
+
+        <div class="mb-3">
+            <label>ID Asignación</label>
+            <input class="form-control" type="text" @bind="@inspeccion.AsignacionVehiculoID" readonly />
+        </div>
+
+        <div class="mb-3">
+            <label>ID Vehículo</label>
+            <input class="form-control" type="text" @bind="@inspeccion.VehiculoID" readonly />
+        </div>
+
+        <div class="mb-3">
+            <label>ID Accesorio</label>
+            <input class="form-control" type="text" @bind="@inspeccion.AccesorioVehiculoID" readonly />
+        </div>
+
+        <div class="mb-3">
+            <label>Nombre Responsable Entrega</label>
+            <input class="form-control" type="text" @bind="@inspeccion.NombreResponsableEntrega" required />
+        </div>
+
+        <div class="mb-3">
+            <label>Kilometraje Inicial</label>
+            <input class="form-control" type="number" @bind="@inspeccion.KilometrajeInicial" required />
+        </div>
+
+        <div class="mb-3">
+            <label>Nombre Responsable Recepción</label>
+            <input class="form-control" type="text" @bind="@inspeccion.NombreResponsableRecepcion" required />
+        </div>
+
+        <div class="mb-3">
+            <label>Kilometraje Final</label>
+            <input class="form-control" type="number" @bind="@inspeccion.KilometrajeFinal" required />
+        </div>
+
+        <div class="mb-3">
+            <label>Observaciones</label>
+            <textarea class="form-control" @bind="@inspeccion.Observaciones" rows="3" required></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Registrar Inspección</button>
+    </EditForm>
+
+    @if (!string.IsNullOrEmpty(mensaje))
+    {
+        <p>@mensaje</p>
+    }
+}
+
+@code {
+    [Parameter]
+    public int AsignacionId { get; set; }
+
+    private AsignacionVehiculo asignacion;
+    private List<AccesorioVehiculo> accesorios;
+    private Inspeccion inspeccion = new Inspeccion();
+    private string mensaje;
+
+    protected override async Task OnInitializedAsync()
+    {
+        asignacion = await DbContext.AsignacionVehiculo
+            .Include(a => a.Colaboradores)
+            .Include(a => a.Vehiculo)
+            .FirstOrDefaultAsync(a => a.AsignacionVehiculoID == AsignacionId);
+
+        if (asignacion != null)
+        {
+            inspeccion.AsignacionVehiculoID = asignacion.AsignacionVehiculoID;
+            inspeccion.VehiculoID = asignacion.VehiculoID; // Agregar el ID del vehículo
+
+            // Obtener accesorios del vehículo
+            accesorios = await DbContext.AccesorioVehiculo
+                .Where(av => av.VehiculoID == asignacion.VehiculoID)
+                .Include(av => av.Accesorio)
+                .ToListAsync();
+
+            // Asignar el primer accesorio como por defecto, si existe
+            var primerAccesorio = accesorios.FirstOrDefault();
+            if (primerAccesorio != null)
+            {
+                inspeccion.AccesorioVehiculoID = primerAccesorio.AccesorioVehiculoID; // Asignar directamente el ID del accesorio
+            }
+        }
+    }
+
+    private async Task RegistrarInspeccion()
+    {
+        // Agregar el nuevo registro de inspección a la base de datos
+        DbContext.Inspeccion.Add(inspeccion);
+        await DbContext.SaveChangesAsync();
+
+        mensaje = "Inspección registrada con éxito.";
+
+        // Redirigir a una página específica después de registrar la inspección
+        NavigationManager.NavigateTo("/VerReservarcion"); // Cambia "/ruta-deseada" por la ruta que desees
+    }
+}
