@@ -221,7 +221,7 @@ namespace ProyectoTranSql.Data
                      //.OnDelete(DeleteBehavior.Restrict);
             });
 
-            // Configuración de la entidad EstadoAccesorios
+             // Configuración de la entidad EstadoAccesorios
             modelBuilder.Entity<EstadoAccesorios>(entity =>
             {
                 entity.ToTable("EstadoAccesorios");
@@ -259,7 +259,6 @@ namespace ProyectoTranSql.Data
                       .WithMany()
                       .HasForeignKey(av => av.EstadoAccesorioID);
             });
-
             modelBuilder.Entity<Inspeccion>(entity =>
             {
                 entity.ToTable("Inspeccion");

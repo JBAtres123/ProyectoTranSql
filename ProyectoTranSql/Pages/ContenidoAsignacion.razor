@@ -4,6 +4,10 @@
 @inject ProyectoTranSql.Data.MyDbContext DbContext
 @inject NavigationManager NavigationManager
 
+<head>
+    <link href="css/StyleAsignacionContenido.css" rel="stylesheet" />
+</head>
+
 <h3>Asignar Vehículo</h3>
 
 @if (asignacion == null)
@@ -12,15 +16,28 @@
 }
 else
 {
+    <!-- Tabla para mostrar detalles principales de la solicitud, vehículo y colaborador -->
+    <table class="table table-bordered table-striped table-custom">
+        <thead class="table-dark">
+            <tr>
+                <th>Placa del Vehículo</th>
+                <th>Nombre del Colaborador</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>@placaVehiculo</td>
+                <td>@nombreColaborador</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Formulario de asignación -->
     <EditForm Model="@asignacion" OnValidSubmit="GuardarAsignacion">
         <DataAnnotationsValidator />
         <ValidationSummary />
 
-        <p>Solicitud: @solicitudId</p> <!-- Mostrar SolicitudID -->
-        <p>Colaborador: @asignacion.ColaboradorID</p>
-        <p>Vehículo: @asignacion.VehiculoID</p>
-
-        <button type="submit" class="btn btn-primary" disabled="@isSubmitting">Guardar Asignación</button>
+        <button type="submit" class="btn btn-primary submit-button" disabled="@isSubmitting">Guardar Asignación</button>
     </EditForm>
 }
 
@@ -34,9 +51,13 @@ else
 @code {
     [Parameter] public int solicitudId { get; set; }
     [Parameter] public int vehiculoId { get; set; }
+    
     private AsignacionVehiculo asignacion;
-    private string errorMessage; // Campo para almacenar mensajes de error
-    private bool isSubmitting; // Para controlar el estado del botón de envío
+    private string errorMessage;
+    private bool isSubmitting;
+
+    private string placaVehiculo;
+    private string nombreColaborador;
 
     protected override async Task OnInitializedAsync()
     {
@@ -52,12 +73,16 @@ else
             if (colaboradorID.HasValue)
             {
                 asignacion = new AsignacionVehiculo
-                    {
-                        ColaboradorID = colaboradorID.Value,
-                        VehiculoID = vehiculoId,
-                        FechaAsignacion = DateTime.Now
-                    };
+                {
+                    ColaboradorID = colaboradorID.Value,
+                    VehiculoID = vehiculoId,
+                    FechaAsignacion = DateTime.Now
+                };
                 Console.WriteLine($"Asignación inicializada: ColaboradorID = {asignacion.ColaboradorID}, VehiculoID = {asignacion.VehiculoID}");
+
+                // Obtener detalles de Placa y Nombre del Colaborador para mostrar en la tabla
+                placaVehiculo = await ObtenerPlacaVehiculo(vehiculoId);
+                nombreColaborador = await ObtenerNombreColaborador(colaboradorID.Value);
             }
             else
             {
@@ -66,7 +91,7 @@ else
         }
         catch (Exception ex)
         {
-            errorMessage = $"Error al cargar la asignación: {ex.Message}"; // Almacena el mensaje de error
+            errorMessage = $"Error al cargar la asignación: {ex.Message}";
             Console.WriteLine(errorMessage);
         }
     }
@@ -76,7 +101,6 @@ else
         Console.WriteLine($"Buscando solicitud con ID: {solicitudId}");
 
         var solicitud = await DbContext.SolicitudReservacion
-            .Include(s => s.Colaboradores)
             .FirstOrDefaultAsync(s => s.SolicitudID == solicitudId);
 
         if (solicitud == null)
@@ -86,91 +110,97 @@ else
         }
         else
         {
-            Console.WriteLine($"Solicitud encontrada, ColaboradorID: {solicitud.ColaboradorID}");
             return solicitud.ColaboradorID;
         }
     }
 
+    private async Task<string> ObtenerPlacaVehiculo(int vehiculoId)
+    {
+        var vehiculo = await DbContext.Vehiculos
+            .Where(v => v.VehiculoID == vehiculoId)
+            .Select(v => v.Placa)
+            .FirstOrDefaultAsync();
+
+        return vehiculo ?? "No disponible";
+    }
+
+    private async Task<string> ObtenerNombreColaborador(int colaboradorId)
+    {
+        var colaborador = await DbContext.Colaboradores
+            .Where(c => c.ColaboradorID == colaboradorId)
+            .Select(c => c.Nombre)
+            .FirstOrDefaultAsync();
+
+        return colaborador ?? "Desconocido";
+    }
+
     private async Task GuardarAsignacion()
     {
-        isSubmitting = true; // Activar estado de envío
+        isSubmitting = true;
 
-        // Verifica que los IDs no sean nulos
         if (!asignacion.ColaboradorID.HasValue || !asignacion.VehiculoID.HasValue)
         {
             errorMessage = "ColaboradorID o VehiculoID son nulos.";
             Console.WriteLine(errorMessage);
-            isSubmitting = false; // Desactivar estado de envío
+            isSubmitting = false;
             return;
         }
 
-        // Iniciar una transacción
         using var transaction = await DbContext.Database.BeginTransactionAsync();
 
         try
         {
-            // Verifica si el VehiculoID es válido
             var vehiculo = await DbContext.Vehiculos.FindAsync(asignacion.VehiculoID);
             if (vehiculo == null)
             {
                 errorMessage = $"El VehiculoID {asignacion.VehiculoID} no existe.";
                 Console.WriteLine(errorMessage);
-                isSubmitting = false; // Desactivar estado de envío
-                return; // Salir si el vehículo no existe
+                isSubmitting = false;
+                return;
             }
 
-            // Guardar la asignación
-            Console.WriteLine($"Guardando asignación: ColaboradorID: {asignacion.ColaboradorID}, VehiculoID: {asignacion.VehiculoID}");
             DbContext.AsignacionVehiculo.Add(asignacion);
             await DbContext.SaveChangesAsync();
 
-            // Actualizar el vehículo del colaborador
             var colaborador = await DbContext.Colaboradores.FindAsync(asignacion.ColaboradorID);
             if (colaborador != null)
             {
                 colaborador.VehiculoID = asignacion.VehiculoID;
                 await DbContext.SaveChangesAsync();
-                Console.WriteLine($"Vehículo asignado al colaborador: {colaborador.Nombre} {colaborador.Apellido}");
+                Console.WriteLine($"Vehículo asignado al colaborador: {colaborador.Nombre}");
             }
             else
             {
                 errorMessage = $"No se encontró un colaborador con ID: {asignacion.ColaboradorID}";
                 Console.WriteLine(errorMessage);
-                isSubmitting = false; // Desactivar estado de envío
+                isSubmitting = false;
                 return;
             }
 
-            // Crear una notificación
             var notificacion = new NotificacionColaborador
-                {
-                    SolicitudID = solicitudId,
-                    AsignacionVehiculoID = asignacion.AsignacionVehiculoID,
-                    ColaboradorID = asignacion.ColaboradorID, // Asigna el ColaboradorID aquí
-                    Informacion = $"El vehículo {asignacion.VehiculoID} ha sido asignado al colaborador {colaborador.Nombre} {colaborador.Apellido}.",
-                    FechaHora = DateTime.Now
-                };
+            {
+                SolicitudID = solicitudId,
+                AsignacionVehiculoID = asignacion.AsignacionVehiculoID,
+                ColaboradorID = asignacion.ColaboradorID,
+                Informacion = $"El vehículo {asignacion.VehiculoID} ha sido asignado al colaborador {colaborador.Nombre}.",
+                FechaHora = DateTime.Now
+            };
 
-
-            // Agregar la notificación a la base de datos
             DbContext.NotificacionColaborador.Add(notificacion);
             await DbContext.SaveChangesAsync();
 
-            // Agregar registro a GaritaControl
             var garitaControl = new GaritaControl
-                {
-                    AsignacionVehiculoID = asignacion.AsignacionVehiculoID, // Usar el ID de asignación recién creado
-                    NotificacionGarita = $"El vehículo {asignacion.VehiculoID} ha sido asignado.",
-                    FechaNotificacion = DateTime.Now
-                };
+            {
+                AsignacionVehiculoID = asignacion.AsignacionVehiculoID,
+                NotificacionGarita = $"El vehículo {asignacion.VehiculoID} ha sido asignado.",
+                FechaNotificacion = DateTime.Now
+            };
 
-            // Guardar GaritaControl
             DbContext.GaritaControl.Add(garitaControl);
             await DbContext.SaveChangesAsync();
 
-            // Confirmar la transacción
             await transaction.CommitAsync();
 
-            // Redirigir a la página de visualización
             NavigationManager.NavigateTo("/asignaciones");
         }
         catch (Exception ex)
@@ -185,10 +215,7 @@ else
         }
         finally
         {
-            isSubmitting = false; // Desactivar estado de envío en cualquier caso
+            isSubmitting = false;
         }
     }
-
-
 }
-

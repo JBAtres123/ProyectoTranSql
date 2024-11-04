@@ -21,10 +21,10 @@ namespace ProyectoTranSql.Data
 
             if (usuario.Contraseña == contraseña)
             {
-                return usuario.TipoUsuario; // Retorna el tipo de usuario
+                return usuario.TipoUsuario; 
             }
 
-            return null; // Contraseña incorrecta
+            return null; 
         }
     }
 }

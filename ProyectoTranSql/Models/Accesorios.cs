@@ -28,14 +28,14 @@ namespace ProyectoTranSql.Models
 
         public virtual int VehiculoID { get; set; }
         [ForeignKey("VehiculoID")]
-        public Vehiculo Vehiculo { get; set; }  // Relación con Vehiculo
+        public Vehiculo Vehiculo { get; set; }  
 
         public virtual int AccesorioID { get; set; }
         [ForeignKey("AccesorioID")]
-        public Accesorios Accesorio { get; set; }  // Relación con Accesorios
+        public Accesorios Accesorio { get; set; }  
 
         public virtual int EstadoAccesorioID { get; set; }
         [ForeignKey("EstadoAccesorioID")]
-        public virtual EstadoAccesorios EstadoAccesorio { get; set; }  // Relación con EstadoAccesorios
+        public virtual EstadoAccesorios EstadoAccesorio { get; set; }  
     }
 }

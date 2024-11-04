@@ -8,7 +8,6 @@
 
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <!-- Botón "Inicio" en la parte superior izquierda -->
         <button class="btn btn-primary btn-circle" @onclick="IrInicio">Inicio</button>
         <h3>Listado de Solicitudes de Reservación</h3>
     </div>
@@ -41,7 +40,11 @@
                 <tbody>
                     @foreach (var solicitud in solicitudes)
                     {
-                        <tr>
+                        var estaAprobada = solicitud.EstadoSolicitudID == 1;
+                        var estaRechazada = solicitud.EstadoSolicitudID == 2;
+                        var filaClase = (estaAprobada || estaRechazada) ? "table-light" : "";
+
+                        <tr class="@filaClase">
                             <td>@solicitud.SolicitudID</td>
                             <td>@solicitud.Motivo</td>
                             <td>@solicitud.FechaSolicitud.ToShortDateString()</td>
@@ -52,8 +55,16 @@
                             <td>@solicitud.Piloto?.NombrePiloto</td>
                             <td>
                                 <div class="d-flex justify-content-between">
-                                    <button class="btn btn-success btn-sm me-1" @onclick="() => AprobarSolicitud(solicitud.SolicitudID)">Aprobar</button>
-                                    <button class="btn btn-danger btn-sm me-1" @onclick="() => RechazarSolicitud(solicitud.SolicitudID)">Rechazar</button>
+                                    <button class="btn btn-success btn-sm me-1"
+                                            @onclick="() => AprobarSolicitud(solicitud.SolicitudID)"
+                                            disabled="@((estaAprobada || estaRechazada) ? "disabled" : null)">
+                                        Aprobar
+                                    </button>
+                                    <button class="btn btn-danger btn-sm me-1"
+                                            @onclick="() => RechazarSolicitud(solicitud.SolicitudID)"
+                                            disabled="@((estaAprobada || estaRechazada) ? "disabled" : null)">
+                                        Rechazar
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -69,7 +80,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Cargar las entidades relacionadas con Include
         solicitudes = await DbContext.SolicitudReservacion
             .Include(s => s.Colaboradores)
             .Include(s => s.Departamentos)
@@ -81,30 +91,26 @@
 
     private async Task AprobarSolicitud(int solicitudId)
     {
-        await CambiarEstado(solicitudId, 1); // Estado Aprobado
+        await CambiarEstado(solicitudId, 1);
         NavigationManager.NavigateTo($"/AprobarSolicitud/{solicitudId}");
     }
 
     private async Task RechazarSolicitud(int solicitudId)
     {
-        await CambiarEstado(solicitudId, 2); // Estado Rechazado
+        await CambiarEstado(solicitudId, 2);
         NavigationManager.NavigateTo($"/RechazarSolicitud/{solicitudId}");
     }
 
     private async Task CambiarEstado(int solicitudId, int nuevoEstado)
     {
-        // Buscar la solicitud en la base de datos
         var solicitud = await DbContext.SolicitudReservacion.FindAsync(solicitudId);
 
         if (solicitud != null)
         {
-            // Cambiar el estado de la solicitud
             solicitud.EstadoSolicitudID = nuevoEstado;
 
-            // Guardar los cambios en la base de datos
             await DbContext.SaveChangesAsync();
 
-            // Recargar las solicitudes para reflejar el cambio
             solicitudes = await DbContext.SolicitudReservacion
                 .Include(s => s.Colaboradores)
                 .Include(s => s.Departamentos)
@@ -115,9 +121,8 @@
         }
     }
 
-    // Método para redirigir a la página de inicio
     private void IrInicio()
     {
-        NavigationManager.NavigateTo("/LogisticaTrans"); // Cambia "/Inicio" a la ruta deseada
+        NavigationManager.NavigateTo("/LogisticaTrans");
     }
 }

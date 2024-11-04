@@ -31,11 +31,11 @@ namespace ProyectoTranSql.Models
     public class ModeloVehiculo
     {
         public int ModeloVehiculoID { get; set; }
-        public string Modelo { get; set; } // Nombre del modelo del vehículo
+        public string Modelo { get; set; } 
         public int Año { get; set; }
         public int MarcaVehiculoID { get; set; }
 
-        // Relación con MarcaVehiculo
+    
         public virtual MarcaVehiculo MarcaVehiculo { get; set; }
     }
 
@@ -45,14 +45,14 @@ namespace ProyectoTranSql.Models
     public class MarcaVehiculo
     {
         public int MarcaVehiculoID { get; set; }
-        public string Marca { get; set; } // Cambiado de Nombre a Marca
+        public string Marca { get; set; } 
     }
 
 
     public class EstadosVehiculo
     {
         public int EstadoVehiculoID { get; set; }
-        public string Estado { get; set; } // Cambiado a Estado para coincidir con la tabla
+        public string Estado { get; set; }
     }
 
 

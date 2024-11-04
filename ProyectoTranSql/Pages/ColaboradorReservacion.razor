@@ -75,7 +75,7 @@ else
     private Departamento departamento;
     private string mensajeError;
     private List<Vehiculo> vehiculos;
-    private bool mostrarVehiculos; // Controla la visibilidad de la lista
+    private bool mostrarVehiculos; 
 
     private async Task BuscarColaborador()
     {
@@ -99,22 +99,22 @@ else
             .Include(v => v.ModeloVehiculo.MarcaVehiculo)
             .Include(v => v.EstadoVehiculo)
             .ToListAsync();
-        mostrarVehiculos = true; // Mostrar la lista de vehículos
+        mostrarVehiculos = true; 
     }
 
     private void OcultarVehiculos()
     {
-        mostrarVehiculos = false; // Ocultar la lista de vehículos
-        vehiculos = null; // Opcionalmente, puedes vaciar la lista
+        mostrarVehiculos = false; 
+        vehiculos = null; 
     }
 
-    // Método para redirigir a la página de reservación con el ID del colaborador
+
     private void ReservarVehiculo()
     {
-        NavigationManager.NavigateTo($"/FormularioReservar");
+        NavigationManager.NavigateTo($"/FormularioReservar?colaboradorId={colaboradorId}");
     }
 
-    // Método para ver las notificaciones
+   
     private void VerMisNotificaciones()
     {
         NavigationManager.NavigateTo($"/NotificacionesColaborador?colaboradorId={colaboradorId}");

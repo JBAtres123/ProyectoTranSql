@@ -73,11 +73,11 @@ else
     {
         if (rechazoSolicitud != null)
         {
-            // Guardar el rechazo en la tabla RechazoSolicitud
+          
             DbContext.RechazoSolicitud.Add(rechazoSolicitud);
             await DbContext.SaveChangesAsync();
 
-            // Redirigir a la página de ver reservaciones
+          
             NavigationManager.NavigateTo("/VerReservarcion");
         }
     }

@@ -16,13 +16,31 @@
             <ValidationSummary />
 
             <div class="campo">
+                <label for="colaboradorId" class="etiqueta">Su ID:</label>
+                <InputNumber id="colaboradorId" @bind-Value="formModel.ColaboradorID" class="form-control" required readonly />
+            </div>
+
+            <div class="campo">
                 <label for="nombreDestino" class="etiqueta">Nombre del Destino:</label>
                 <InputText id="nombreDestino" @bind-Value="formModel.NombreDestino" class="form-control" required />
             </div>
 
             <div class="campo">
-                <label for="nombrePiloto" class="etiqueta">Responsable (Nombre del Piloto):</label>
-                <InputText id="nombrePiloto" @bind-Value="formModel.NombrePiloto" class="form-control" required />
+                <label for="pilotoId" class="etiqueta">Responsable (Seleccionar Piloto):</label>
+                <InputSelect id="pilotoId" @bind-Value="formModel.PilotoID" class="form-control" required>
+                    <option value="">Seleccione un Piloto</option>
+                    @if (listaPilotos != null && listaPilotos.Any())
+                    {
+                        foreach (var piloto in listaPilotos)
+                        {
+                            <option value="@piloto.PilotoID">@piloto.NombrePiloto</option>
+                        }
+                    }
+                    else
+                    {
+                        <option disabled>No hay pilotos disponibles</option>
+                    }
+                </InputSelect>
             </div>
 
             <div class="campo">
@@ -35,11 +53,6 @@
                 <InputDate id="fechaSolicitud" @bind-Value="formModel.FechaSolicitud" class="form-control" required />
             </div>
 
-            <div class="campo">
-                <label for="colaboradorId" class="etiqueta">ID del Colaborador:</label>
-                <InputNumber id="colaboradorId" @bind-Value="formModel.ColaboradorID" class="form-control" required />
-            </div>
-
             <div>
                 <button type="submit" class="btn btn-primary">Guardar Solicitud</button>
             </div>
@@ -49,7 +62,6 @@
     {
         <p class="exito">Solicitud guardada con éxito.</p>
 
-        <!-- Botones separados con espacio -->
         <div>
             <button @onclick="NuevoRegistro" class="btn btn-secondary" style="margin-right: 10px;">Crear Otra Solicitud</button>
             <button @onclick="Terminar" class="btn btn-danger">Terminar</button>
@@ -62,26 +74,73 @@
     }
 </div>
 
-
 @code {
     private FormModel formModel = new FormModel();
+    private List<Piloto> listaPilotos;
     private bool formEnviado = false;
     private string mensajeError = null;
 
     private class FormModel
     {
         public string NombreDestino { get; set; }
-        public string NombrePiloto { get; set; }
+        public int? PilotoID { get; set; }  // Cambiado a int? para permitir null
         public string Motivo { get; set; }
         public DateTime FechaSolicitud { get; set; }
         public int ColaboradorID { get; set; }
     }
 
+    protected override async Task OnInitializedAsync()
+    {
+        // Cargar la lista de pilotos de la base de datos
+        listaPilotos = await DbContext.Piloto.ToListAsync();
+
+        // Obtener el ID del colaborador desde la cadena de consulta
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        string colaboradorIdQuery = query["colaboradorId"];
+
+        if (int.TryParse(colaboradorIdQuery, out int colaboradorId))
+        {
+            formModel.ColaboradorID = colaboradorId; 
+        }
+        else
+        {
+            mensajeError = "ID de colaborador no válido.";
+        }
+    }
+
     private async Task GuardarDatos()
     {
+        mensajeError = null; // Limpiar mensajes de error previos
+
+        // Validaciones
+        if (string.IsNullOrWhiteSpace(formModel.NombreDestino))
+        {
+            mensajeError += "El campo 'Nombre del Destino' es obligatorio. ";
+        }
+
+        if (formModel.PilotoID == null)
+        {
+            mensajeError += "Por favor, seleccione un piloto. ";
+        }
+
+        if (string.IsNullOrWhiteSpace(formModel.Motivo))
+        {
+            mensajeError += "El campo 'Motivo de la Solicitud' es obligatorio. ";
+        }
+
+        if (formModel.FechaSolicitud == default)
+        {
+            mensajeError += "El campo 'Fecha de la Solicitud' es obligatorio. ";
+        }
+
+        if (!string.IsNullOrEmpty(mensajeError))
+        {
+            return; // Si hay errores, no continuar con la operación
+        }
+
         try
         {
-            // Buscar el colaborador por ID
             var colaborador = await DbContext.Colaboradores.FindAsync(formModel.ColaboradorID);
 
             if (colaborador == null)
@@ -91,31 +150,23 @@
             }
 
             var nuevoDestino = new Destino
-                {
-                    NombreDestino = formModel.NombreDestino
-                };
+            {
+                NombreDestino = formModel.NombreDestino
+            };
 
             await DbContext.Destino.AddAsync(nuevoDestino);
             await DbContext.SaveChangesAsync();
 
-            var nuevoPiloto = new Piloto
-                {
-                    NombrePiloto = formModel.NombrePiloto
-                };
-
-            await DbContext.Piloto.AddAsync(nuevoPiloto);
-            await DbContext.SaveChangesAsync();
-
             var nuevaSolicitud = new SolicitudReservacion
-                {
-                    Motivo = formModel.Motivo,
-                    FechaSolicitud = formModel.FechaSolicitud,
-                    DestinoID = nuevoDestino.DestinoID,
-                    PilotoID = nuevoPiloto.PilotoID,
-                    ColaboradorID = formModel.ColaboradorID, // Asignar el ID del colaborador
-                    DepartamentoID = colaborador.DepartamentoID, // Asignar el ID del departamento automáticamente
-                    EstadoSolicitudID = null, // Estado inicial, si puede ser nulo
-                };
+            {
+                Motivo = formModel.Motivo,
+                FechaSolicitud = formModel.FechaSolicitud,
+                DestinoID = nuevoDestino.DestinoID,
+                PilotoID = formModel.PilotoID.Value,
+                ColaboradorID = formModel.ColaboradorID,
+                DepartamentoID = colaborador.DepartamentoID,
+                EstadoSolicitudID = null,
+            };
 
             await DbContext.SolicitudReservacion.AddAsync(nuevaSolicitud);
             await DbContext.SaveChangesAsync();
@@ -124,7 +175,6 @@
         }
         catch (Exception ex)
         {
-            // Capturar la excepción interna para obtener más detalles del error
             mensajeError = $"Error al guardar la solicitud: {ex.Message}";
             if (ex.InnerException != null)
             {
@@ -133,15 +183,13 @@
         }
     }
 
-    // Método para reiniciar el formulario
     private void NuevoRegistro()
     {
-        formModel = new FormModel(); // Restablecer los datos del formulario
-        formEnviado = false; // Habilitar el formulario nuevamente
-        mensajeError = null; // Limpiar mensajes de error
+        formModel = new FormModel();
+        formEnviado = false;
+        mensajeError = null;
     }
 
-    // Método para redirigir al componente de login
     private void Terminar()
     {
         Navigation.NavigateTo("/login");

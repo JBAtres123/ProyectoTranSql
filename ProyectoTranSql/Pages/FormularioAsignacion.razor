@@ -11,10 +11,13 @@
 <h3>Solicitud Aprobada</h3>
 
 @if (solicitud == null)
+
 {
     <p><em>Cargando detalles...</em></p>
 }
+
 else
+
 {
     <div>
         <p><strong>Solicitud ID:</strong> @solicitud.SolicitudID</p>
@@ -28,6 +31,7 @@ else
 <h3>Lista de Vehículos Disponibles</h3>
 
 @if (vehiculos != null && vehiculos.Any())
+
 {
     <table class="vehiculos-table">
         <thead>
@@ -44,6 +48,7 @@ else
         </thead>
         <tbody>
             @foreach (var vehiculo in vehiculos)
+
             {
                 <tr>
                     <td>@vehiculo.ModeloVehiculo.MarcaVehiculo.Marca</td>
@@ -59,6 +64,7 @@ else
                     </td>
                     <td>
                         @if (vehiculo.EstadoVehiculoID == 1)
+
                         {
                             <button @onclick="() => AsignarVehiculo(vehiculo)">Asignar</button>
                         }
@@ -77,88 +83,165 @@ else
         </tbody>
     </table>
 }
+
 else
+
 {
     <p>No hay vehículos disponibles en la base de datos.</p>
 }
 
 @code {
     [Parameter] public int solicitudId { get; set; }
+
     private SolicitudReservacion solicitud;
+
     private List<Vehiculo> vehiculos;
-    private List<EstadosVehiculo> estados; // Lista para almacenar los estados disponibles
+
+    private List<EstadosVehiculo> estados;
+
+
 
     protected override async Task OnInitializedAsync()
+
     {
+
         await LoadSolicitud();
+
         await LoadVehiculos();
+
         await LoadEstados();
+
     }
+
+
 
     private async Task LoadSolicitud()
+
     {
-        // Cargar los detalles de la solicitud seleccionada
+
+
+
         solicitud = await DbContext.SolicitudReservacion
+
             .Include(s => s.Colaboradores)
+
             .FirstOrDefaultAsync(s => s.SolicitudID == solicitudId);
+
     }
+
+
 
     private async Task LoadVehiculos()
+
     {
+
         vehiculos = await DbContext.Vehiculos
+
             .Include(v => v.ModeloVehiculo)
+
             .Include(v => v.ModeloVehiculo.MarcaVehiculo)
+
             .Include(v => v.EstadoVehiculo)
+
             .Include(v => v.TipoVehiculo)
+
             .ToListAsync();
+
     }
+
+
 
     private async Task LoadEstados()
+
     {
-        estados = await DbContext.EstadosVehiculo.ToListAsync(); // Cargar todos los estados disponibles
+
+        estados = await DbContext.EstadosVehiculo.ToListAsync();
+
     }
+
+
 
     private async Task AsignarVehiculo(Vehiculo vehiculo)
+
     {
-        vehiculo.EstadoVehiculoID = 2; // Cambiar estado a "Reservado"
+
+        vehiculo.EstadoVehiculoID = 2;
+
         await DbContext.SaveChangesAsync();
 
-        // Navegar a la página de asignación pasando el solicitudId y el vehiculoID
+
+
+
+
         NavigationManager.NavigateTo($"/AsignarVehiculo/{solicitudId}/{vehiculo.VehiculoID}");
+
     }
+
+
 
     private async Task CambiarEstadoVehiculo(Vehiculo vehiculo, ChangeEventArgs e)
+
     {
+
         if (int.TryParse(e.Value?.ToString(), out var nuevoEstadoID))
+
         {
-            // Actualizar el estado del vehículo en la base de datos
+
+
+
             vehiculo.EstadoVehiculoID = nuevoEstadoID;
 
-            // Guardar cambios en la base de datos
+
+
+
+
             await DbContext.SaveChangesAsync();
 
-            // Actualizar el objeto EstadoVehiculo del vehículo desde la base de datos
+
+
+
+
             var nuevoEstado = await DbContext.EstadosVehiculo.FindAsync(nuevoEstadoID);
+
             if (nuevoEstado != null)
+
             {
-                vehiculo.EstadoVehiculo = nuevoEstado; // Asignar el nuevo objeto EstadoVehiculo
+
+                vehiculo.EstadoVehiculo = nuevoEstado;
+
             }
 
-            // Actualizar la vista
+
+
+
+
             StateHasChanged();
+
         }
+
     }
+
+
 
     private string GetEstadoCssClass(int estadoId)
+
     {
+
         return estadoId switch
+
         {
+
             1 => "estado-verde",  // Disponible
+
             2 => "estado-gris",   // Reservado
+
             3 => "estado-azul-claro", // En Ruta
+
             4 => "estado-rojo",   // Inactivo
+
             _ => ""
+
         };
+
     }
 }
-
